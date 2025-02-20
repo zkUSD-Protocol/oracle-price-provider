@@ -1,19 +1,17 @@
 const { getPriceOf } = require("./priceService");
-const { redis } = require("../utils/redis");
+const { SELECTED_PROVIDERS } = require("../config/providers");
+const { redis } = require("../utils/clients/redis");
 
-const POLLING_INTERVAL = 3 * 60 * 1000;
-const PRICE_CACHE_KEY = "mina:latest_price";
+const { POLLING_INTERVAL, PRICE_CACHE_KEY } = require("../constants/others");
 
 async function fetchAndUpdatePrice() {
-  console.log("\n+++++++++++ STARTING JOB +++++++++++");
+  console.log("\n+++++++++++ STARTING TASK +++++++++++");
 
   try {
-    console.log("++ Fetching Mina price\n");
     const results = await getPriceOf("mina");
-
     await redis.set(PRICE_CACHE_KEY, JSON.stringify(results[1]));
 
-    console.log("+++++++++++ FINISHED JOB +++++++++++\n");
+    console.log("+++++++++++ FINISHED TASK +++++++++++\n");
     return true;
   } catch (error) {
     console.error("Error in price update job:", error);
@@ -24,10 +22,19 @@ async function fetchAndUpdatePrice() {
 let pollingInterval;
 
 function startPricePolling() {
-  fetchAndUpdatePrice();
+  console.log(
+    "Price polling service started. Interval set to :",
+    POLLING_INTERVAL / 1000,
+    "s"
+  );
+  console.log(
+    `Fetching prices from ${
+      Object.keys(SELECTED_PROVIDERS).length
+    } data providers.`
+  );
 
+  fetchAndUpdatePrice();
   pollingInterval = setInterval(fetchAndUpdatePrice, POLLING_INTERVAL);
-  console.log("Price polling started - running every 3 minutes");
 }
 
 function stopPricePolling() {

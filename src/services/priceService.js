@@ -2,100 +2,20 @@ const { getResultPath, getHeaderName } = require("../utils/providerHelpers");
 const axios = require("axios");
 const _ = require("lodash");
 const { CircuitString } = require("o1js");
-const { testnetSignatureClient } = require("../utils/signature");
+const { testnetSignatureClient } = require("../utils/clients/signature");
+
 const { SELECTED_PROVIDERS } = require("../config/providers");
+const { CoinGekoSymbols, endpoint } = require("../constants/data_providers");
+const { MULTIPLICATION_FACTOR } = require("../constants/others");
+const { getHeaderConfig } = require("../utils/providerHelpers");
 const {
-  CoinGekoSymbols,
-  BinanceSymbols,
-  CryptoCompareSymbols,
-  PricePaprikeSymbols,
-  PriceMessariSymbols,
-  CoinCapSymbols,
-  CoinLoreSymbols,
-  CoinCodexSymbols,
-  KuCoinSymbols,
-  HuobiSymbols,
-  ByBitSymbols,
-  CexIOSymbols,
-  SwapZoneSymbols,
-  MEXCSymbols,
-  GateIOSymbols,
-  OKXSymbols,
-} = require("../constants/symbols");
+  getMedian,
+  getMAD,
+  processFloatString,
+  getTimestamp,
+} = require("../utils/helpers");
 
-const MULTIPLICATION_FACTOR = 10;
 const DEPLOYER_KEY = process.env.DEPLOYER_KEY;
-
-function processFloatString(input) {
-  const floatValue = parseFloat(input);
-  if (isNaN(floatValue)) return "Invalid input";
-  const multipliedValue = floatValue * Math.pow(10, MULTIPLICATION_FACTOR);
-  const integerValue = Math.floor(multipliedValue);
-  return integerValue.toString();
-}
-
-function getTimestamp(data) {
-  const date = new Date(data);
-  return Math.floor(date.getTime() / 1000);
-}
-
-function getDataProviderEndpoint(provider, token) {
-  if (!SELECTED_PROVIDERS[provider]) return null;
-
-  const symbols = {
-    binance: BinanceSymbols,
-    coingecko: CoinGekoSymbols,
-    cryptocompare: CryptoCompareSymbols,
-    coinpaprika: PricePaprikeSymbols,
-    messari: PriceMessariSymbols,
-    coincap: CoinCapSymbols,
-    coinlore: CoinLoreSymbols,
-    coincodex: CoinCodexSymbols,
-    kucoin: KuCoinSymbols,
-    huobi: HuobiSymbols,
-    bybit: ByBitSymbols,
-    "cex.io": CexIOSymbols,
-    swapzone: SwapZoneSymbols,
-    mexc: MEXCSymbols,
-    "gate.io": GateIOSymbols,
-    okx: OKXSymbols,
-  };
-
-  const id = symbols[provider][token.toLowerCase()];
-  if (!id) return null;
-
-  const endpoints = {
-    binance: `https://api.binance.com/api/v3/ticker/price?symbol=${id}USDT`,
-    cryptocompare: `https://min-api.cryptocompare.com/data/price?fsym=${id}&tsyms=USD`,
-    coinpaprika: `https://api.coinpaprika.com/v1/tickers/${id}`,
-    messari: `https://data.messari.io/api/v1/assets/${id}/metrics`,
-    coincap: `https://api.coincap.io/v2/assets/${id}`,
-    coinlore: `https://api.coinlore.net/api/ticker/?id=${id}`,
-    coincodex: `https://coincodex.com/api/coincodex/get_coin/${id}`,
-    coingecko: `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`,
-    kucoin: `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${id}-USDT`,
-    huobi: `https://api.huobi.pro/market/history/trade?symbol=${id}usdt&size=1`,
-    bybit: `https://api-testnet.bybit.com/v5/market/tickers?category=spot&symbol=${id}USDT`,
-    "cex.io": `https://cex.io/api/last_price/${id}/USD`,
-    swapzone: `https://api.swapzone.io/v1/exchange/get-rate?from=${id}&to=usdc&amount=1000`,
-    mexc: `https://api.mexc.com/api/v3/ticker/price?symbol=${id}USDT`,
-    "gate.io": `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${id}_USDT`,
-    okx: `https://www.okx.com/api/v5/market/ticker?instId=${id}-USDT`,
-  };
-
-  return endpoints[provider];
-}
-
-function getHeaderConfig(provider) {
-  const headerName = getHeaderName(provider);
-
-  if (headerName) {
-    const apiKey = process.env[`${headerName}`];
-    return { headers: { [headerName]: apiKey } };
-  }
-
-  return { headerName: null, config: {} };
-}
 
 async function callSignAPICall(url, resultPath, provider) {
   try {
@@ -132,19 +52,6 @@ async function callSignAPICall(url, resultPath, provider) {
     console.error(`Error calling API ${url}:`, error.message);
     return ["0", 0, null, url];
   }
-}
-
-function getMedian(array) {
-  const sorted = array.slice().sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[middle - 1] + sorted[middle]) / 2
-    : sorted[middle];
-}
-
-function getMAD(array) {
-  const median = getMedian(array);
-  return getMedian(array.map((value) => Math.abs(value - median)));
 }
 
 async function removeOutliers(
@@ -189,17 +96,17 @@ async function getPriceOf(token = "mina") {
     const providers = Object.keys(SELECTED_PROVIDERS).filter(
       (provider) => SELECTED_PROVIDERS[provider]
     );
-    console.log(`Fetching prices from ${providers.length} selected providers`);
 
     const pricePromises = providers.map(async (provider) => {
-      const endpoint = getDataProviderEndpoint(provider, token);
-      if (!endpoint) return ["0", 0, null, ""];
+      const url = endpoint(provider, token);
+      if (!url) return ["0", 0, null, ""];
 
+      // Special case for CoinGecko
       const tokenId =
         provider === "coingecko" ? CoinGekoSymbols[token.toLowerCase()] : null;
 
       const resultPath = getResultPath(provider, tokenId);
-      return callSignAPICall(endpoint, resultPath, provider);
+      return callSignAPICall(url, resultPath, provider);
     });
 
     const results = await Promise.all(pricePromises);

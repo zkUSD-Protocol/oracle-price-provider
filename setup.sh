@@ -5,6 +5,21 @@ declare -A selected_providers
 GREEN='\033[0;32m'
 NC='\033[0m' 
 echo "Welcome to Mina Price Oracle Setup!"
+
+# Get polling interval
+while true; do
+    read -p "Enter polling interval in seconds (default is 180): " polling_interval
+    if [[ -z "$polling_interval" ]]; then
+        polling_interval=180
+        break
+    elif [[ "$polling_interval" =~ ^[0-9]+$ ]]; then
+        break
+    else
+        echo "Please enter a valid number"
+    fi
+done
+
+echo
 echo "Please select the data providers you want to use (y/n for each):"
 echo
 
@@ -27,6 +42,7 @@ for i in "${!providers[@]}"; do
     selected_providers[${providers[$i]}]=$response
 done
 
+# Create providers configuration
 echo "Creating providers configuration..."
 config_file="src/config/providers.js"
 mkdir -p src/config
@@ -50,4 +66,23 @@ cat >> $config_file << 'EOL'
 module.exports = { SELECTED_PROVIDERS };
 EOL
 
-echo -e "${GREEN}Setup completed! Provider configuration has been generated.${NC}"
+# Update others.js with polling interval
+others_file="src/constants/others.js"
+mkdir -p src/constants
+
+# Convert seconds to milliseconds
+polling_ms=$((polling_interval * 1000))
+
+cat > $others_file << EOL
+const POLLING_INTERVAL = ${polling_ms}; // Polling interval in ms
+const PRICE_CACHE_KEY = "mina:latest_price";
+const MULTIPLICATION_FACTOR = 10;
+
+module.exports = {
+  PRICE_CACHE_KEY,
+  POLLING_INTERVAL,
+  MULTIPLICATION_FACTOR,
+};
+EOL
+
+echo -e "${GREEN}Setup completed! Provider configuration and polling interval have been generated.${NC}"

@@ -1,3 +1,5 @@
+const { SELECTED_PROVIDERS } = require("../config/providers");
+
 const CoinGekoSymbols = {
   ethereum: "ethereum",
   bitcoin: "bitcoin",
@@ -271,6 +273,58 @@ const BTSESymbols = {
   cardano: "ADA",
 };
 
+const ALL_SYMBOLS = {
+  binance: BinanceSymbols,
+  coingecko: CoinGekoSymbols,
+  cryptocompare: CryptoCompareSymbols,
+  coinpaprika: PricePaprikeSymbols,
+  messari: PriceMessariSymbols,
+  coincap: CoinCapSymbols,
+  coinlore: CoinLoreSymbols,
+  coincodex: CoinCodexSymbols,
+  kucoin: KuCoinSymbols,
+  huobi: HuobiSymbols,
+  bybit: ByBitSymbols,
+  "cex.io": CexIOSymbols,
+  swapzone: SwapZoneSymbols,
+  mexc: MEXCSymbols,
+  "gate.io": GateIOSymbols,
+  okx: OKXSymbols,
+  btse: BTSESymbols,
+  poloniex: PoloniexSymbols,
+  coinranking: CoinRankingSymbols,
+  coinapi: CoinAPISymbols,
+  coinmarketcap: CMCSymbols,
+};
+
+function endpoint(provider, token) {
+  if (!SELECTED_PROVIDERS[provider]) return null;
+
+  const id = ALL_SYMBOLS[provider][token.toLowerCase()];
+  if (!id) return null;
+
+  const endpoints = {
+    binance: `https://api.binance.com/api/v3/ticker/price?symbol=${id}USDT`,
+    cryptocompare: `https://min-api.cryptocompare.com/data/price?fsym=${id}&tsyms=USD`,
+    coinpaprika: `https://api.coinpaprika.com/v1/tickers/${id}`,
+    messari: `https://data.messari.io/api/v1/assets/${id}/metrics`,
+    coincap: `https://api.coincap.io/v2/assets/${id}`,
+    coinlore: `https://api.coinlore.net/api/ticker/?id=${id}`,
+    coincodex: `https://coincodex.com/api/coincodex/get_coin/${id}`,
+    coingecko: `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`,
+    kucoin: `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${id}-USDT`,
+    huobi: `https://api.huobi.pro/market/history/trade?symbol=${id}usdt&size=1`,
+    bybit: `https://api-testnet.bybit.com/v5/market/tickers?category=spot&symbol=${id}USDT`,
+    "cex.io": `https://cex.io/api/last_price/${id}/USD`,
+    swapzone: `https://api.swapzone.io/v1/exchange/get-rate?from=${id}&to=usdc&amount=1000`,
+    mexc: `https://api.mexc.com/api/v3/ticker/price?symbol=${id}USDT`,
+    "gate.io": `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${id}_USDT`,
+    okx: `https://www.okx.com/api/v5/market/ticker?instId=${id}-USDT`,
+  };
+
+  return endpoints[provider];
+}
+
 module.exports = {
   CoinGekoSymbols,
   BinanceSymbols,
@@ -293,4 +347,6 @@ module.exports = {
   OKXSymbols,
   PoloniexSymbols,
   BTSESymbols,
+  ALL_SYMBOLS,
+  endpoint,
 };

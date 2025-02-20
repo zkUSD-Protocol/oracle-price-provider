@@ -44,7 +44,19 @@ function getHeaderName(provider) {
   return headers[provider] || "";
 }
 
+function getHeaderConfig(provider) {
+  const headerName = getHeaderName(provider);
+
+  if (headerName) {
+    const apiKey = process.env[`${headerName}`];
+    return { headers: { [headerName]: apiKey } };
+  }
+
+  return { headerName: null, config: {} };
+}
+
 module.exports = {
   getResultPath,
   getHeaderName,
+  getHeaderConfig,
 };
