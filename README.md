@@ -4,12 +4,21 @@ A price oracle service for zkUSD that aggregates cryptocurrency price data from 
 
 ## Quick Start Guide
 
-### Docker Setup
+### Using Pre-built Docker Image
+
+Pull and run the latest version from Docker Hub:
+
+```bash
+docker pull botdock/oracle-price-provider:latest
+docker run -p 3000:3000 botdock/oracle-price-provider:latest
+```
+
+### Docker Setup (Building from Source)
 
 1. Clone and navigate to the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/zkUSD-Protocol/oracle-price-provider.git
 cd oracle-price-provider
 ```
 
@@ -146,6 +155,25 @@ docker run -p 3000:3000 \
 
 ## Development Details
 
+### Docker Image Details
+
+The Docker image is built using:
+
+- node:20-alpine as the base image
+- pnpm for package management
+- bash for scripting support
+
+Latest version tags:
+
+- `latest`: Most recent stable build
+- `v1.0.0`: Initial release
+
+To use a specific version:
+
+```bash
+docker pull botdock/oracle-price-provider:v1.0.0
+```
+
 ### Port Mapping
 
 The application runs on port 3000 inside the container. You can map this to any port on your host machine:
@@ -162,22 +190,6 @@ docker run -p 80:3000 oracle-price-provider
 ```
 
 Port mapping format: `HOST_PORT:CONTAINER_PORT`
-
-### Testing in a New Directory
-
-To test an existing build in a new location:
-
-```bash
-mkdir oracle-price-provider-test
-cd oracle-price-provider-test
-
-# Run with default configuration
-docker run -p 3000:3000 oracle-price-provider
-
-# Clean up after testing
-docker stop $(docker ps -q --filter ancestor=oracle-price-provider)
-docker container prune
-```
 
 ### Development Workflows
 
