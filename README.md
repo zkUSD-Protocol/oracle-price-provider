@@ -10,7 +10,7 @@ Pull and run the latest version from Docker Hub:
 
 ```bash
 docker pull botdock/oracle-price-provider:latest
-docker run -p 3000:3000 botdock/oracle-price-provider:latest
+docker run -p 3000:3000 --env-file .env botdock/oracle-price-provider:latest
 ```
 
 ### Docker Setup (Building from Source)
@@ -28,10 +28,52 @@ cd oracle-price-provider
 docker build -t oracle-price-provider .
 ```
 
-3. Run with default configuration:
+3. Prepare Environment Variables
+
+Before running the Docker image, you must set the required environment variables. Create a `.env` file with the following mandatory variables:
+
+```
+DEPLOYER_KEY='your_deployer_key'
+REDIS_PORT='6379'
+REDIS_HOST='localhost'
+REDIS_PASSWORD='your_redis_password'
+```
+
+**Important Environment Variable Notes:**
+
+- `DEPLOYER_KEY`: Required for signing the fetched values.
+- `REDIS_PORT`: Port for Redis connection.
+- `REDIS_HOST`: Hostname or IP for Redis server.
+- `REDIS_PASSWORD`: Password for Redis authentication.
+- `x_api_key`: **Optional** - Only required if using the Swapzone provider.
+  - By default, Swapzone is enabled in the provider list.
+  - If you're using Swapzone, you must add this environment variable.
+
+Example setup:
 
 ```bash
-docker run -p 3000:3000 oracle-price-provider
+# Create .env file
+mkdir oracle-test
+cd oracle-test
+cat > .env << EOL
+DEPLOYER_KEY='test_key'
+REDIS_PORT='6379'
+REDIS_HOST='localhost'
+REDIS_PASSWORD='test_password'
+
+# Only add if using Swapzone
+x_api_key='your_swapzone_api_key'
+EOL
+```
+
+4. Run with Environment Variables:
+
+```bash
+# Pull the latest image
+docker pull botdock/oracle-price-provider:latest
+
+# Run the container with environment variables
+docker run -p 3000:3000 --env-file .env botdock/oracle-price-provider:latest
 ```
 
 ### Local Development Setup
