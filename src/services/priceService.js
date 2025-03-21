@@ -3,8 +3,8 @@ const axios = require("axios");
 const _ = require("lodash");
 const { CircuitString } = require("o1js");
 const { testnetSignatureClient } = require("../utils/clients/signature");
-
 const { SELECTED_PROVIDERS } = require("../config/providers");
+const { fetchCryptoData } = require("../utils/security/DoH");
 const { CoinGekoSymbols, endpoint } = require("../constants/data_providers");
 const { MULTIPLICATION_FACTOR } = require("../constants/others");
 const { getHeaderConfig } = require("../utils/providerHelpers");
@@ -17,10 +17,13 @@ const {
 
 const DEPLOYER_KEY = process.env.DEPLOYER_KEY;
 
-async function callSignAPICall(url, resultPath, provider) {
+async function callSignAPICall(url, resultPath, provider, coinId) {
   try {
     const config = getHeaderConfig(provider);
-    const response = await axios.get(url, config);
+    const response = await fetchCryptoData(provider, coinId, {
+      useDoh: true,
+      headers: config?.headers || {},
+    });
 
     const price = _.get(response, resultPath);
 
@@ -101,12 +104,20 @@ async function getPriceOf(token = "mina") {
       const url = endpoint(provider, token);
       if (!url) return ["0", 0, null, ""];
 
+      const endpointInfo = endpoint(provider, token);
+      if (!endpointInfo) return ["0", 0, null, ""];
+
       // Special case for CoinGecko
       const tokenId =
         provider === "coingecko" ? CoinGekoSymbols[token.toLowerCase()] : null;
 
       const resultPath = getResultPath(provider, tokenId);
-      return callSignAPICall(url, resultPath, provider);
+      return callSignAPICall(
+        endpointInfo.url,
+        resultPath,
+        provider,
+        endpointInfo.id
+      );
     });
 
     const results = await Promise.all(pricePromises);

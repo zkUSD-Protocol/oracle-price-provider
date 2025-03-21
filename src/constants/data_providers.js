@@ -322,7 +322,10 @@ function endpoint(provider, token) {
     okx: `https://www.okx.com/api/v5/market/ticker?instId=${id}-USDT`,
   };
 
-  return endpoints[provider];
+  return {
+    url: endpoints[provider],
+    id: id,
+  };
 }
 
 module.exports = {

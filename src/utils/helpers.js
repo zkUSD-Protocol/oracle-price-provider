@@ -1,4 +1,5 @@
 const { MULTIPLICATION_FACTOR } = require("../constants/others");
+const { COLORS } = require("../constants/others");
 
 function getMAD(array) {
   const median = getMedian(array);
@@ -25,9 +26,34 @@ function processFloatString(input) {
   return integerValue.toString();
 }
 
+function logSuccess(message) {
+  console.log(`${COLORS.GREEN}[SUCCESS]${COLORS.RESET} ${message}`);
+}
+
+function logWarning(message) {
+  console.log(`${COLORS.YELLOW}[WARN]${COLORS.RESET} ${message}`);
+}
+
+function logError(message) {
+  console.log(`${COLORS.RED}[ERROR]${COLORS.RESET} ${message}`);
+}
+
+function logInfo(message) {
+  console.log(`${COLORS.BLUE}[INFO]${COLORS.RESET} ${message}`);
+}
+
+function logDebug(message) {
+  console.log(`${COLORS.CYAN}[DEBUG]${COLORS.RESET} ${message}`);
+}
+
 module.exports = {
   getMAD,
   getMedian,
   getTimestamp,
   processFloatString,
+  logSuccess,
+  logWarning,
+  logError,
+  logInfo,
+  logDebug,
 };
