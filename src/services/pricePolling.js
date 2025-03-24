@@ -9,7 +9,21 @@ async function fetchAndUpdatePrice() {
 
   try {
     const results = await getPriceOf("mina");
-    await redis.set(PRICE_CACHE_KEY, JSON.stringify(results[1]));
+    // Store only the price data without the block height and signature
+    const priceData = {
+      price: results[1].price,
+      floatingPrice: results[1].floatingPrice,
+      decimals: results[1].decimals,
+      aggregationTimestamp: results[1].aggregationTimestamp,
+      prices_returned: results[1].prices_returned,
+      signatures: results[1].signatures,
+      timestamps: results[1].timestamps,
+      urls: results[1].urls,
+    };
+
+    console.log("Setting price to redis: ", PRICE_CACHE_KEY);
+    console.log(JSON.stringify(priceData, null, 2));
+    await redis.set(PRICE_CACHE_KEY, JSON.stringify(priceData));
 
     console.log("+++++++++++ FINISHED TASK +++++++++++\n");
     return true;

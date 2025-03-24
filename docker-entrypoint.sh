@@ -21,7 +21,6 @@ check_required_env \
   "DEPLOYER_KEY" \
   "REDIS_HOST" \
   "REDIS_PORT" \
-  "REDIS_PASSWORD"
 
 # Check if Swapzone is enabled (defaults to 1 if not set)
 SWAPZONE=${SWAPZONE:-1}
@@ -60,11 +59,13 @@ EOL
 
 # Generate others.js with polling interval
 polling_ms=$((${POLLING_INTERVAL:-180} * 1000))
+RANDOM_NUM=$(( $RANDOM % 9000 + 1000 ))
+
 
 cat > src/constants/others.js << EOL
 const POLLING_INTERVAL = ${polling_ms}; // Polling interval in ms
-const PRICE_CACHE_KEY = "mina:latest_price";
-const MULTIPLICATION_FACTOR = 10;
+const PRICE_CACHE_KEY = "mina:latest_price:${RANDOM_NUM}";
+const MULTIPLICATION_FACTOR = 9;
 
 module.exports = {
   PRICE_CACHE_KEY,

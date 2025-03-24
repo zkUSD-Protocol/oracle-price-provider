@@ -1,9 +1,8 @@
 const { getResultPath, getHeaderName } = require("../utils/providerHelpers");
 const axios = require("axios");
 const _ = require("lodash");
-const { CircuitString } = require("o1js");
-const { testnetSignatureClient } = require("../utils/clients/signature");
-
+const { CircuitString, fetchLastBlock } = require("o1js");
+const { signatureClient } = require("../utils/clients/signature");
 const { SELECTED_PROVIDERS } = require("../config/providers");
 const { CoinGekoSymbols, endpoint } = require("../constants/data_providers");
 const { MULTIPLICATION_FACTOR } = require("../constants/others");
@@ -33,7 +32,7 @@ async function callSignAPICall(url, resultPath, provider) {
     const fieldDecimals = BigInt(MULTIPLICATION_FACTOR);
     const fieldTimestamp = BigInt(Timestamp);
 
-    const signature = testnetSignatureClient.signFields(
+    const signature = signatureClient.signFields(
       [fieldURL, fieldPrice, fieldDecimals, fieldTimestamp],
       DEPLOYER_KEY
     );
@@ -137,23 +136,11 @@ async function getPriceOf(token = "mina") {
     const aggregatedAt = Date.now();
     const processedMeanPrice = processFloatString(meanPrice);
 
-    const signedPrice = testnetSignatureClient.signFields(
-      [BigInt(processedMeanPrice)],
-      DEPLOYER_KEY
-    );
-
-    console.log(`Mean: ${meanPrice} | Processed Mean: ${processedMeanPrice}`);
-
     const assetCacheObject = {
       price: processedMeanPrice,
       floatingPrice: meanPrice,
       decimals: MULTIPLICATION_FACTOR,
       aggregationTimestamp: aggregatedAt,
-      signature: {
-        signature: signedPrice.signature,
-        publicKey: signedPrice.publicKey,
-        data: signedPrice.data[0].toString(),
-      },
       prices_returned: cleanPrices,
       signatures: cleanSignatures,
       timestamps: cleanTimestamps,
@@ -167,6 +154,39 @@ async function getPriceOf(token = "mina") {
   }
 }
 
+async function signPriceWithLatestBlock(priceData) {
+  try {
+    // Get the last block
+    const lastBlock = await fetchLastBlock();
+    const blockHeight = lastBlock.blockchainLength;
+    const fieldBlockHeight = BigInt(blockHeight);
+
+    // Sign the price with the latest block height
+    const signedPrice = signatureClient.signFields(
+      [BigInt(priceData.price), fieldBlockHeight],
+      DEPLOYER_KEY
+    );
+
+    // Return complete object with signature and latest block
+    return {
+      ...priceData,
+      blockHeight: blockHeight,
+      signed: {
+        signature: signedPrice.signature,
+        publicKey: signedPrice.publicKey,
+        data: {
+          price: signedPrice.data[0].toString(),
+          blockHeight: signedPrice.data[1].toString(),
+        },
+      },
+    };
+  } catch (error) {
+    console.error("Error signing price with latest block:", error.message);
+    throw error;
+  }
+}
+
 module.exports = {
   getPriceOf,
+  signPriceWithLatestBlock,
 };
