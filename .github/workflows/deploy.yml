@@ -53,5 +53,5 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/zkusd-containers:latest
-            ${{ steps.login-ecr.outputs.registry }}/zkusd-containers:${{ steps.set_docker_tag.outputs.tag }}
+            ${{ steps.login-ecr.outputs.registry }}/zkusd-oracle:latest
+            ${{ steps.login-ecr.outputs.registry }}/zkusd-oracle:${{ steps.set_docker_tag.outputs.tag }}
