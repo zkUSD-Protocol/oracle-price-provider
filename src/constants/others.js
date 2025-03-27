@@ -1,5 +1,9 @@
-const PRICE_CACHE_KEY = "mina:latest_price";
-const POLLING_INTERVAL = 3 * 60 * 1000; // Can be changed. In ms.
+const PRICE_CACHE_KEY = "fizk:mina:latest_price";
+const CERTIFICATE_CACHE_KEY = "fizk:doh:latest_certificates";
+
+const POLLING_INTERVAL = 1 * 60 * 1000; // 3 Minutes
+const CERTIFICATE_CHECK_INTERVAL = 1 * 60 * 1000; // 60 Minutes
+
 const MULTIPLICATION_FACTOR = 10;
 const COLORS = {
   RESET: "\x1b[0m",
@@ -12,6 +16,7 @@ const COLORS = {
   BLUE: "\x1b[34m",
   MAGENTA: "\x1b[35m",
   CYAN: "\x1b[36m",
+  SUPER_BRIGHT_CYAN: "\x1b[1;96m",
 
   BG_RED: "\x1b[41m",
   BG_GREEN: "\x1b[42m",
@@ -20,7 +25,9 @@ const COLORS = {
 
 module.exports = {
   PRICE_CACHE_KEY,
+  CERTIFICATE_CACHE_KEY,
   POLLING_INTERVAL,
+  CERTIFICATE_CHECK_INTERVAL,
   MULTIPLICATION_FACTOR,
   COLORS,
 };

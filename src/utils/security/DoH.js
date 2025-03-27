@@ -20,6 +20,7 @@ const {
   logDebug,
   logInfo,
 } = require("../helpers");
+const { DOH_PROVIDERS } = require("../../config/doh.js");
 
 // Cache for DNS resolutions to minimize lookups (TTL based)
 const DNS_CACHE = new Map();
@@ -31,76 +32,8 @@ const MAX_RETRIES = 3;
  * Format: SHA-256 of the certificate's public key in both Base64 and Hex formats
  * Multiple fingerprints per provider for certificate rotation
  */
-const PINNED_CERTIFICATES = {
-  cloudflare: {
-    // Primary: cloudflare-dns.com
-    name: "Cloudflare",
-    hostname: "cloudflare-dns.com",
-    path: "/dns-query",
-    fingerprints: {
-      sha256: [
-        // Current certificate (verified March 2025)
-        "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
-        // Previous certificates (kept for transitional compatibility)
-        "3b0kD4uRxwCxDmuBS9ZAFX4KrSV/B2S1FK67Lc5kcPU=",
-        "YZPgTZ+woNCCCIW3LH2CxQeLzB/1m42QcCTBSdgayjs=",
-      ],
-    },
-  },
-  google: {
-    // Primary: dns.google
-    name: "Google",
-    hostname: "dns.google",
-    path: "/resolve",
-    fingerprints: {
-      sha256: [
-        // Current certificate (verified March 2025)
-        "kGFXXqU9M5Ro7jPA0MpCdbM5T3P8uU+JE3nu/CXd0Ic=",
-        // Previous certificates (kept for transitional compatibility)
-        "CFPCh1qXoX82LQ+tJtrjUrJzYvRWAIu5VQs0sDuU1EA=",
-        "8P8Rh6NGH3QryL5vSaha+Ux3TYgpzBSnAUzpyhPVZt0=",
-      ],
-    },
-  },
-  quad9: {
-    // Primary: dns.quad9.net
-    name: "Quad9",
-    hostname: "dns.quad9.net",
-    path: "/dns-query",
-    fingerprints: {
-      sha256: [
-        // Current certificate (verified March 2025)
-        "i2kObfz0qIKCGNWt7MjBUeSrh0Dyjb0/zWINImZES+I=",
-        // Previous certificates (kept for transitional compatibility)
-        "0Oxjdx/KBc7jqoVuC5ryUeFvsM+zp07v2PVf1k34bfw=",
-        "W9QP7MHLZ5r1Kg4sNw8DgloHvVmxb/mTiN0q7NyJ9hM=",
-      ],
-    },
-  },
-  adguard: {
-    // Primary: dns.adguard.com
-    name: "AdGuard",
-    hostname: "dns.adguard.com",
-    path: "/dns-query",
-    fingerprints: {
-      sha256: [
-        // Current certificate (verified March 2025)
-        "BVWqvuK5dTmVnYOuLO7Vr03Y1pKAuDettDoamujSXRk=",
-        // Previous certificates (kept for transitional compatibility)
-        "dgAzp2/FEF+PFv76x0NRH5vzDaihmBR4zrkRVmkWP60=",
-        "zdO6pMWk4/Lg7OZaRQ9XpCGw6kH9aUDXxZ/iCVJlcMA=",
-      ],
-    },
-  },
-};
 
 // List of DoH providers in order of preference
-const DOH_PROVIDERS = [
-  PINNED_CERTIFICATES.cloudflare,
-  PINNED_CERTIFICATES.google,
-  PINNED_CERTIFICATES.quad9,
-  PINNED_CERTIFICATES.adguard,
-];
 
 // Crypto API endpoints with recommended headers
 const CRYPTO_APIS = {

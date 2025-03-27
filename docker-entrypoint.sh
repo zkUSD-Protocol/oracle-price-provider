@@ -21,14 +21,15 @@ check_required_env \
   "DEPLOYER_KEY" \
   "REDIS_HOST" \
   "REDIS_PORT" \
-  "REDIS_PASSWORD"
+  "REDIS_PASSWORD" \
+  "MAINNET_SIGNER_CLIENT"
 
 # Check if Swapzone is enabled (defaults to 1 if not set)
 SWAPZONE=${SWAPZONE:-1}
 if [ "$SWAPZONE" = "1" ]; then
   # Check for Swapzone API key only if Swapzone is enabled
-  if [ -z "${x-api-key}" ]; then    
-    echo "Error: Swapzone is enabled but x-api-key is not set"
+  if [ -z "${SWAPZONE_API_KEY}" ]; then    
+    echo "Error: Swapzone is enabled but SWAPZONE_API_KEY is not set"
     exit 1
   fi
 fi
@@ -55,7 +56,26 @@ const SELECTED_PROVIDERS = {
     okx: ${OKX:-1}
 };
 
-module.exports = { SELECTED_PROVIDERS };
+const PROVIDER_WEIGHTS = {
+    binance: ${BINANCE_WEIGHT:-1},
+    cryptocompare: ${CRYPTOCOMPARE_WEIGHT:-1},
+    coinpaprika: ${COINPAPRIKA_WEIGHT:-1},
+    messari: ${MESSARI_WEIGHT:-1},
+    coincap: ${COINCAP_WEIGHT:-1},
+    coinlore: ${COINLORE_WEIGHT:-1},
+    coincodex: ${COINCODEX_WEIGHT:-1},
+    coingecko: ${COINGECKO_WEIGHT:-1},
+    kucoin: ${KUCOIN_WEIGHT:-1},
+    huobi: ${HUOBI_WEIGHT:-1},
+    bybit: ${BYBIT_WEIGHT:-1},
+    'cex.io': ${CEXIO_WEIGHT:-1},
+    swapzone: ${SWAPZONE_WEIGHT:-1},
+    mexc: ${MEXC_WEIGHT:-1},
+    'gate.io': ${GATEIO_WEIGHT:-1},
+    okx: ${OKX_WEIGHT:-1}
+};
+
+module.exports = { SELECTED_PROVIDERS, PROVIDER_WEIGHTS };
 EOL
 
 # Generate others.js with polling interval

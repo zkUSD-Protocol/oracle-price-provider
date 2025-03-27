@@ -23,36 +23,39 @@ function getResultPath(provider, id) {
 
 function getHeaderName(provider) {
   const headers = {
-    swapzone: "x-api-key",
-    "cex.io": "",
-    coincodex: "",
-    coingecko: "",
-    binance: "",
-    cryptocompare: "",
-    coinpaprika: "",
-    messari: "",
-    coincap: "",
-    coinlore: "",
-    kucoin: "",
-    huobi: "",
-    bybit: "",
-    mexc: "",
-    "gate.io": "",
-    okx: "",
+    swapzone: {
+      headerName: "x-api-key",
+      envVar: "SWAPZONE_API_KEY",
+    },
+    "cex.io": { headerName: "", envVar: "" },
+    coincodex: { headerName: "", envVar: "" },
+    coingecko: { headerName: "", envVar: "" },
+    binance: { headerName: "", envVar: "" },
+    cryptocompare: { headerName: "", envVar: "" },
+    coinpaprika: { headerName: "", envVar: "" },
+    messari: { headerName: "", envVar: "" },
+    coincap: { headerName: "", envVar: "" },
+    coinlore: { headerName: "", envVar: "" },
+    kucoin: { headerName: "", envVar: "" },
+    huobi: { headerName: "", envVar: "" },
+    bybit: { headerName: "", envVar: "" },
+    mexc: { headerName: "", envVar: "" },
+    "gate.io": { headerName: "", envVar: "" },
+    okx: { headerName: "", envVar: "" },
   };
 
-  return headers[provider] || "";
+  return headers[provider] || { headerName: "", envVar: "" };
 }
 
 function getHeaderConfig(provider) {
-  const headerName = getHeaderName(provider);
+  const headerInfo = getHeaderName(provider);
 
-  if (headerName) {
-    const apiKey = process.env[`${headerName}`];
-    return { headers: { [headerName]: apiKey } };
+  if (headerInfo.headerName) {
+    const apiKey = process.env[headerInfo.envVar];
+    return { headers: { [headerInfo.headerName]: apiKey } };
   }
 
-  return { headerName: null, config: {} };
+  return { headers: {} };
 }
 
 module.exports = {

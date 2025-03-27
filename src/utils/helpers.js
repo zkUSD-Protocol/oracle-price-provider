@@ -42,8 +42,12 @@ function logInfo(message) {
   console.log(`${COLORS.BLUE}[INFO]${COLORS.RESET} ${message}`);
 }
 
-function logDebug(message) {
-  console.log(`${COLORS.CYAN}[DEBUG]${COLORS.RESET} ${message}`);
+function logAlert(message) {
+  console.log(`${COLORS.MAGENTA}[ALERT]${COLORS.RESET} ${message}`);
+}
+
+function logHeading(message) {
+  console.log(`${COLORS.SUPER_BRIGHT_CYAN}[TITLE]${COLORS.RESET} ${message}`);
 }
 
 module.exports = {
@@ -55,5 +59,6 @@ module.exports = {
   logWarning,
   logError,
   logInfo,
-  logDebug,
+  logAlert,
+  logHeading,
 };

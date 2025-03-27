@@ -1,9 +1,11 @@
-const { getResultPath, getHeaderName } = require("../utils/providerHelpers");
-const axios = require("axios");
+const { getResultPath } = require("../utils/providerHelpers");
 const _ = require("lodash");
 const { CircuitString } = require("o1js");
-const { testnetSignatureClient } = require("../utils/clients/signature");
-const { SELECTED_PROVIDERS } = require("../config/providers");
+const {
+  testnetSignatureClient,
+  mainnetSignatureClient,
+} = require("../utils/clients/signature");
+const { SELECTED_PROVIDERS, PROVIDER_WEIGHTS } = require("../config/providers");
 const { fetchCryptoData } = require("../utils/security/DoH");
 const { CoinGekoSymbols, endpoint } = require("../constants/data_providers");
 const { MULTIPLICATION_FACTOR } = require("../constants/others");
@@ -16,8 +18,20 @@ const {
 } = require("../utils/helpers");
 
 const DEPLOYER_KEY = process.env.DEPLOYER_KEY;
+const signerClient =
+  process.env.MAINNET_SIGNER_CLIENT == undefined
+    ? testnetSignatureClient
+    : process.env.MAINNET_SIGNER_CLIENT == 1
+    ? mainnetSignatureClient
+    : testnetSignatureClient;
 
-async function callSignAPICall(url, resultPath, provider, coinId) {
+async function callSignAPICall(
+  url,
+  resultPath,
+  provider,
+  providerWeight,
+  coinId
+) {
   try {
     const config = getHeaderConfig(provider);
     const response = await fetchCryptoData(provider, coinId, {
@@ -26,23 +40,40 @@ async function callSignAPICall(url, resultPath, provider, coinId) {
     });
 
     const price = _.get(response, resultPath);
+    const weightedPrice = price * providerWeight;
 
     const Price =
       provider === "swapzone" ? String(price / 1000) : String(price);
+    const WeightedPrice =
+      provider === "swapzone"
+        ? String(weightedPrice / 1000)
+        : String(weightedPrice);
     const Timestamp = getTimestamp(response.headers["date"]);
+    const normalizedWeight = String(providerWeight * MULTIPLICATION_FACTOR); // Normalized to account for weights in decimals
 
     const fieldURL = BigInt(CircuitString.fromString(url).hash());
     const fieldPrice = BigInt(processFloatString(Price));
+    const fieldWeightedPrice = BigInt(processFloatString(WeightedPrice));
+    const fieldWeight = BigInt(processFloatString(normalizedWeight));
     const fieldDecimals = BigInt(MULTIPLICATION_FACTOR);
     const fieldTimestamp = BigInt(Timestamp);
 
-    const signature = testnetSignatureClient.signFields(
-      [fieldURL, fieldPrice, fieldDecimals, fieldTimestamp],
+    const signature = signerClient.signFields(
+      [
+        fieldURL,
+        fieldPrice,
+        fieldWeightedPrice,
+        fieldWeight,
+        fieldDecimals,
+        fieldTimestamp,
+      ],
       DEPLOYER_KEY
     );
 
     return [
       Price,
+      WeightedPrice,
+      providerWeight,
       Timestamp,
       {
         signature: signature.signature,
@@ -59,6 +90,8 @@ async function callSignAPICall(url, resultPath, provider, coinId) {
 
 async function removeOutliers(
   prices,
+  weightedPrices,
+  weights,
   timestamps,
   signatures,
   urls,
@@ -75,19 +108,35 @@ async function removeOutliers(
         const deviation = Math.abs(price - median);
         if (deviation <= threshold * mad) {
           acc.prices.push(price);
+          acc.weightedPrices.push(weightedPrices[i]);
+          acc.weights.push(weights[i]);
           acc.timestamps.push(timestamps[i]);
           acc.signatures.push(signatures[i]);
           acc.urls.push(urls[i]);
         }
         return acc;
       },
-      { prices: [], timestamps: [], signatures: [], urls: [] }
+      {
+        prices: [],
+        weightedPrices: [],
+        weights: [],
+        timestamps: [],
+        signatures: [],
+        urls: [],
+      }
     );
 
     console.log(
-      `Data Points Considered: ${result.prices.length}/${prices.length}`
+      `\nData Points Considered: ${result.prices.length}/${prices.length}`
     );
-    return [result.prices, result.signatures, result.timestamps, result.urls];
+    return [
+      result.prices,
+      result.weightedPrices,
+      result.weights,
+      result.signatures,
+      result.timestamps,
+      result.urls,
+    ];
   } catch (error) {
     console.error("Error removing outliers:", error.message);
     throw error;
@@ -112,10 +161,12 @@ async function getPriceOf(token = "mina") {
         provider === "coingecko" ? CoinGekoSymbols[token.toLowerCase()] : null;
 
       const resultPath = getResultPath(provider, tokenId);
+
       return callSignAPICall(
         endpointInfo.url,
         resultPath,
         provider,
+        PROVIDER_WEIGHTS[provider],
         endpointInfo.id
       );
     });
@@ -123,41 +174,77 @@ async function getPriceOf(token = "mina") {
     const results = await Promise.all(pricePromises);
 
     const validResults = results.reduce(
-      (acc, [price, timestamp, signature, url]) => {
+      (acc, [price, weightedPrice, weight, timestamp, signature, url]) => {
         if (price !== "0" && signature) {
           acc.prices.push(parseFloat(price));
+          acc.weightedPrices.push(parseFloat(weightedPrice));
+          acc.weights.push(parseFloat(weight));
           acc.timestamps.push(timestamp);
           acc.signatures.push(signature);
           acc.urls.push(url);
         }
         return acc;
       },
-      { prices: [], timestamps: [], signatures: [], urls: [] }
+      {
+        prices: [],
+        weightedPrices: [],
+        weights: [],
+        timestamps: [],
+        signatures: [],
+        urls: [],
+      }
     );
 
-    const [cleanPrices, cleanSignatures, cleanTimestamps, cleanUrls] =
-      await removeOutliers(
-        validResults.prices,
-        validResults.timestamps,
-        validResults.signatures,
-        validResults.urls
-      );
+    const [
+      cleanPrices,
+      cleanWeightedPrices,
+      cleanWeights,
+      cleanSignatures,
+      cleanTimestamps,
+      cleanUrls,
+    ] = await removeOutliers(
+      validResults.prices,
+      validResults.weightedPrices,
+      validResults.weights,
+      validResults.timestamps,
+      validResults.signatures,
+      validResults.urls
+    );
 
+    const weightedSum = cleanWeightedPrices.reduce(
+      (sum, weightedPrice) => sum + weightedPrice,
+      0
+    );
+    const totalWeight =
+      cleanWeights.reduce((sum, price) => sum + price, 0) / cleanWeights.length;
+
+    const weightedMeanPrice = weightedSum / totalWeight;
     const meanPrice =
       cleanPrices.reduce((sum, price) => sum + price, 0) / cleanPrices.length;
     const aggregatedAt = Date.now();
+
+    const processedWeightedMeanPrice = processFloatString(weightedMeanPrice);
     const processedMeanPrice = processFloatString(meanPrice);
 
-    const signedPrice = testnetSignatureClient.signFields(
+    const signedPrice = signerClient.signFields(
       [BigInt(processedMeanPrice)],
+      DEPLOYER_KEY
+    );
+    const signedWeightedPrice = signerClient.signFields(
+      [BigInt(processedWeightedMeanPrice)],
       DEPLOYER_KEY
     );
 
     console.log(`Mean: ${meanPrice} | Processed Mean: ${processedMeanPrice}`);
+    console.log(
+      `Weighted Mean: ${weightedMeanPrice} | Processed Weighted Mean: ${processedWeightedMeanPrice}`
+    );
 
     const assetCacheObject = {
       price: processedMeanPrice,
+      weightedPrice: processedWeightedMeanPrice,
       floatingPrice: meanPrice,
+      floatingWeightedPrice: weightedMeanPrice,
       decimals: MULTIPLICATION_FACTOR,
       aggregationTimestamp: aggregatedAt,
       signature: {
@@ -165,13 +252,20 @@ async function getPriceOf(token = "mina") {
         publicKey: signedPrice.publicKey,
         data: signedPrice.data[0].toString(),
       },
+      weightedSignature: {
+        signature: signedWeightedPrice.signature,
+        publicKey: signedWeightedPrice.publicKey,
+        data: signedWeightedPrice.data[0].toString(),
+      },
       prices_returned: cleanPrices,
+      weighted_prices: cleanWeightedPrices,
+      weights: cleanWeights,
       signatures: cleanSignatures,
       timestamps: cleanTimestamps,
       urls: cleanUrls,
     };
 
-    return [meanPrice, assetCacheObject];
+    return [meanPrice, weightedMeanPrice, assetCacheObject];
   } catch (error) {
     console.error("Error in getPriceOf:", error.message);
     throw error;
