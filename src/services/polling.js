@@ -8,9 +8,9 @@ const {
 const { SELECTED_PROVIDERS } = require("../config/providers");
 const { redis } = require("../utils/clients/redis");
 const {
-  POLLING_INTERVAL,
   PRICE_CACHE_KEY,
-  CERTIFICATE_CHECK_INTERVAL,
+  PRICE_POLLING_INTERVAL,
+  CERTIFICATE_POLLING_INTERVAL,
 } = require("../constants/others");
 const {
   logSuccess,
@@ -104,9 +104,9 @@ async function startServices() {
 
   await initializeCertificateValidation();
 
-  logInfo(`Price polling interval set to: ${POLLING_INTERVAL / 1000}s`);
+  logInfo(`Price polling interval set to: ${PRICE_POLLING_INTERVAL / 1000}s`);
   logInfo(
-    `Certificate check interval set to: ${CERTIFICATE_CHECK_INTERVAL / 1000}s`
+    `Certificate check interval set to: ${CERTIFICATE_POLLING_INTERVAL / 1000}s`
   );
   logInfo(
     `Fetching prices from ${
@@ -117,10 +117,13 @@ async function startServices() {
   await fetchAndUpdatePrice();
   await runCertificateValidation();
 
-  pricePollingInterval = setInterval(fetchAndUpdatePrice, POLLING_INTERVAL);
+  pricePollingInterval = setInterval(
+    fetchAndUpdatePrice,
+    PRICE_POLLING_INTERVAL
+  );
   certificateCheckInterval = setInterval(
     runCertificateValidation,
-    CERTIFICATE_CHECK_INTERVAL
+    CERTIFICATE_POLLING_INTERVAL
   );
 
   logSuccess("All services started successfully");

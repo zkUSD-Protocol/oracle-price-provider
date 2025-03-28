@@ -14,8 +14,7 @@ RUN pnpm install
 
 COPY . .
 
-ENV NODE_ENV=production \
-    POLLING_INTERVAL=180
+ENV NODE_ENV=production 
 
 # Make our entry point script executable
 RUN chmod +x docker-entrypoint.sh

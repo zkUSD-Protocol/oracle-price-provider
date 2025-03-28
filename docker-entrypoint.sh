@@ -78,18 +78,42 @@ const PROVIDER_WEIGHTS = {
 module.exports = { SELECTED_PROVIDERS, PROVIDER_WEIGHTS };
 EOL
 
-# Generate others.js with polling interval
-polling_ms=$((${POLLING_INTERVAL:-180} * 1000))
+price_polling_ms=$((${PRICE_POLLING_INTERVAL:-180} * 1000))
+certificate_polling_ms=$((${CERTIFICATE_POLLING_INTERVAL:-600} * 1000))
 
 cat > src/constants/others.js << EOL
-const POLLING_INTERVAL = ${polling_ms}; // Polling interval in ms
-const PRICE_CACHE_KEY = "mina:latest_price";
+const PRICE_CACHE_KEY = "fizk:mina:latest_price";
+const CERTIFICATE_CACHE_KEY = "fizk:doh:latest_certificates";
+
+const PRICE_POLLING_INTERVAL = ${price_polling_ms}; 
+const CERTIFICATE_POLLING_INTERVAL = ${certificate_polling_ms}; 
+
 const MULTIPLICATION_FACTOR = 10;
+const COLORS = {
+  RESET: "\x1b[0m",
+  BRIGHT: "\x1b[1m",
+  DIM: "\x1b[2m",
+
+  RED: "\x1b[31m",
+  GREEN: "\x1b[32m",
+  YELLOW: "\x1b[33m",
+  BLUE: "\x1b[34m",
+  MAGENTA: "\x1b[35m",
+  CYAN: "\x1b[36m",
+  SUPER_BRIGHT_CYAN: "\x1b[1;96m",
+
+  BG_RED: "\x1b[41m",
+  BG_GREEN: "\x1b[42m",
+  BG_YELLOW: "\x1b[43m",
+};
 
 module.exports = {
   PRICE_CACHE_KEY,
-  POLLING_INTERVAL,
+  CERTIFICATE_CACHE_KEY,
+  PRICE_POLLING_INTERVAL,
+  CERTIFICATE_POLLING_INTERVAL,
   MULTIPLICATION_FACTOR,
+  COLORS,
 };
 EOL
 
