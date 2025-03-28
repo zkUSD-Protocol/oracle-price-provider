@@ -18,6 +18,7 @@ const {
   logInfo,
   logHeading,
 } = require("../utils/helpers");
+const { logErrorToFile } = require("../utils/errorLogger");
 
 let isTaskRunning = false; // Lock for avoiding overlaps.
 
@@ -48,15 +49,23 @@ async function fetchAndUpdatePrice() {
       return true;
     } catch (error) {
       logError("Error in price update job:", error);
+      // Add error logging to file
+      await logErrorToFile("PRICE_UPDATE", "Error in price update job", error);
       isTaskRunning = false;
       return false;
     }
   }
 
   logError("ERR! Price update skipped after 5 wait attempts.");
+  // Add error logging to file
+  await logErrorToFile(
+    "PRICE_UPDATE",
+    "Price update skipped after 5 wait attempts"
+  );
   return false;
 }
 
+// Update the runCertificateValidation function error handling
 async function runCertificateValidation() {
   for (let attempt = 1; attempt <= 5; attempt++) {
     if (isTaskRunning) {
@@ -87,12 +96,23 @@ async function runCertificateValidation() {
       return true;
     } catch (error) {
       logError("Error in certificate validation:", error);
+      // Add error logging to file
+      await logErrorToFile(
+        "CERTIFICATE_VALIDATION",
+        "Error in certificate validation",
+        error
+      );
       isTaskRunning = false;
       return false;
     }
   }
 
   logError("ERR! Certificate validation skipped after 5 wait attempts.");
+  // Add error logging to file
+  await logErrorToFile(
+    "CERTIFICATE_VALIDATION",
+    "Certificate validation skipped after 5 wait attempts"
+  );
   return false;
 }
 

@@ -21,6 +21,7 @@ const {
   logInfo,
 } = require("../helpers");
 const { DOH_PROVIDERS } = require("../../config/doh.js");
+const { logErrorToFile } = require("../../utils/errorLogger");
 
 // Cache for DNS resolutions to minimize lookups (TTL based)
 const DNS_CACHE = new Map();
@@ -280,6 +281,7 @@ async function resolveWithDoH(domain, type = "A", options = {}) {
   // All providers failed
   const errorMessage = `All DNS providers failed to resolve ${domain}. Last error: ${lastError?.message}`;
   console.error(`[DoH] ${errorMessage}`);
+  await logErrorToFile("DoH_RESOLVER", errorMessage, lastError);
   throw new Error(errorMessage);
 }
 
@@ -457,6 +459,7 @@ async function fetchCryptoData(provider, coinId, options = {}) {
 
   const errorMessage = `Failed to fetch data from ${provider} for ${coinId} after ${maxRetries} attempts. Last error: ${lastError?.message}`;
   console.error(`[API] ${errorMessage}`);
+  await logErrorToFile("CRYPTO_API", errorMessage, lastError);
 
   throw {
     error: new Error(errorMessage),

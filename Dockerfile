@@ -12,6 +12,8 @@ COPY package.json pnpm-lock.yaml ./
 
 RUN pnpm install
 
+RUN pnpm postinstall
+
 COPY . .
 
 ENV NODE_ENV=production 

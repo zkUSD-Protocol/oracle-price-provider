@@ -16,6 +16,7 @@ const {
   processFloatString,
   getTimestamp,
 } = require("../utils/helpers");
+const { logErrorToFile } = require("../utils/errorLogger");
 
 const DEPLOYER_KEY = process.env.DEPLOYER_KEY;
 const signerClient =
@@ -84,6 +85,11 @@ async function callSignAPICall(
     ];
   } catch (error) {
     console.error(`Error calling API ${url}:`, error.message);
+    await logErrorToFile(
+      "API_CALL",
+      `Error calling API ${url} for provider ${provider} and coin ${coinId}`,
+      error
+    );
     return ["0", 0, null, url];
   }
 }
@@ -139,6 +145,11 @@ async function removeOutliers(
     ];
   } catch (error) {
     console.error("Error removing outliers:", error.message);
+    await logErrorToFile(
+      "PRICE_SERVICE",
+      "Error removing price outliers",
+      error
+    );
     throw error;
   }
 }
@@ -268,6 +279,11 @@ async function getPriceOf(token = "mina") {
     return [meanPrice, weightedMeanPrice, assetCacheObject];
   } catch (error) {
     console.error("Error in getPriceOf:", error.message);
+    await logErrorToFile(
+      "PRICE_SERVICE",
+      `Error fetching price of ${token}`,
+      error
+    );
     throw error;
   }
 }

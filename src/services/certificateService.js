@@ -3,7 +3,6 @@ const crypto = require("crypto");
 const { DOH_PROVIDERS } = require("../config/doh");
 const { CERTIFICATE_CACHE_KEY } = require("../constants/others");
 const { redis } = require("../utils/clients/redis");
-
 const {
   logSuccess,
   logWarning,
@@ -11,6 +10,7 @@ const {
   logInfo,
   logAlert,
 } = require("../utils/helpers");
+const { logErrorToFile } = require("../utils/errorLogger");
 
 function fetchCertificate(hostname) {
   return new Promise((resolve, reject) => {
@@ -151,6 +151,11 @@ async function validateCertificates() {
     } catch (error) {
       logError(
         `Error validating certificate for ${provider.name}: ${error.message}`
+      );
+      await logErrorToFile(
+        "CERTIFICATE_SERVICE",
+        `Error validating certificate for ${provider.name}`,
+        error
       );
     }
   }
