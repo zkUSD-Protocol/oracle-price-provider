@@ -1,8 +1,43 @@
 # Oracle Price Provider
 
+<a id="top"></a>
+
+## Table of Contents
+
+- [Oracle Price Provider](#oracle-price-provider)
+  - [Table of Contents](#table-of-contents)
+  - [Quick Start Guide](#quick-start-guide)
+    - [Using Pre-built Docker Image](#using-pre-built-docker-image)
+    - [Docker Setup (Building from Source)](#docker-setup-building-from-source)
+    - [Local Development Setup](#local-development-setup)
+  - [Configuration](#configuration)
+    - [Default Configuration](#default-configuration)
+    - [Custom Configuration](#custom-configuration)
+      - [Setting Polling Intervals](#setting-polling-intervals)
+      - [Enabling/Disabling Price Providers](#enablingdisabling-price-providers)
+      - [Configuring Provider Weights](#configuring-provider-weights)
+  - [Development Details](#development-details)
+    - [Docker Image Details](#docker-image-details)
+    - [Port Mapping](#port-mapping)
+    - [Development Workflows](#development-workflows)
+      - [Local Development](#local-development)
+      - [Docker Environment](#docker-environment)
+    - [Container Startup Process](#container-startup-process)
+  - [Production Deployment](#production-deployment)
+  - [Complete Environment Variable Reference](#complete-environment-variable-reference)
+    - [Required Variables](#required-variables)
+    - [Conditional Variables](#conditional-variables)
+    - [Optional Variables](#optional-variables)
+    - [Provider Selection Variables (1=enabled, 0=disabled)](#provider-selection-variables-1enabled-0disabled)
+    - [Provider Weight Variables (default: 1)](#provider-weight-variables-default-1)
+
 A price oracle service for zkUSD that aggregates cryptocurrency price data from multiple providers.
 
+<a id="quick-start"></a>
+
 ## Quick Start Guide
+
+<a id="using-prebuilt"></a>
 
 ### Using Pre-built Docker Image
 
@@ -12,6 +47,10 @@ Pull and run the latest version from Docker Hub:
 docker pull botdock/oracle-price-provider:latest
 docker run -p 3000:3000 --env-file .env botdock/oracle-price-provider:latest
 ```
+
+> **Note:** Make sure to set up the [required environment variables](#environment-variables) before running the container.
+
+<a id="building-from-source"></a>
 
 ### Docker Setup (Building from Source)
 
@@ -28,7 +67,7 @@ cd oracle-price-provider
 docker build -t oracle-price-provider .
 ```
 
-3. Prepare Environment Variables
+<a id="environment-variables"></a> 3. Prepare Environment Variables
 
 Before running the Docker image, you must set the required environment variables. Create a `.env` file with the following mandatory variables:
 
@@ -40,6 +79,7 @@ REDIS_PASSWORD='your_redis_password'
 MAINNET_SIGNER_CLIENT=1
 ```
 
+<a id="environment-variable-notes"></a>
 **Important Environment Variable Notes:**
 
 - `DEPLOYER_KEY`: Required for signing the fetched values.
@@ -61,7 +101,7 @@ cat > .env << EOL
 DEPLOYER_KEY='test_key'
 REDIS_PORT='your_redis_port'
 REDIS_HOST='your_redis_host'
-REDIS_PASSWORD='your_redis_password'
+REDIS_PASSWORD='test_password'
 MAINNET_SIGNER_CLIENT=1
 
 # Only add if using Swapzone (required if SWAPZONE=1, which is the default)
@@ -75,6 +115,8 @@ EOL
 # Run the locally built container with environment variables
 docker run -p 3000:3000 --env-file .env oracle-price-provider
 ```
+
+<a id="local-development"></a>
 
 ### Local Development Setup
 
@@ -109,6 +151,8 @@ pnpm start
 
 The application will be accessible at `http://localhost:3000`.
 
+<a id="configuration"></a>
+
 ## Configuration
 
 ### Default Configuration
@@ -135,7 +179,11 @@ By default, the oracle service:
   - Gate.io
   - OKX
 
+<a id="custom-configuration"></a>
+
 ### Custom Configuration
+
+<a id="polling-intervals"></a>
 
 #### Setting Polling Intervals
 
@@ -145,6 +193,8 @@ docker run -p 3000:3000 -e PRICE_POLLING_INTERVAL=60 -e CERTIFICATE_POLLING_INTE
 
 - `PRICE_POLLING_INTERVAL`: Time in seconds between price updates (default: 180)
 - `CERTIFICATE_POLLING_INTERVAL`: Time in seconds between certificate updates (default: 600)
+
+<a id="enable-disable-providers"></a>
 
 #### Enabling/Disabling Price Providers
 
@@ -177,6 +227,8 @@ Available provider environment variables:
 - `MEXC`: MEXC API
 - `GATEIO`: Gate.io API
 - `OKX`: OKX API
+
+<a id="provider-weights"></a>
 
 #### Configuring Provider Weights
 
@@ -235,6 +287,8 @@ docker run -p 3000:3000 \
   -e OKX=1 \
   oracle-price-provider
 ```
+
+<a id="development-details"></a>
 
 ## Development Details
 
@@ -312,6 +366,8 @@ Both local and Docker setups result in:
 2. Configured others.js file with polling intervals
 3. Running Node.js application
 4. Application accessible on configured port
+
+<a id="env-var-reference"></a>
 
 ## Complete Environment Variable Reference
 
