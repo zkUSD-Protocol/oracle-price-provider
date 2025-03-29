@@ -129,7 +129,7 @@ git clone <repository-url>
 cd oracle-price-provider
 ```
 
-2. Install dependencies :
+2. Install dependencies:
 
 ```bash
 pnpm install
@@ -141,7 +141,7 @@ pnpm install
 pnpm postinstall
 ```
 
-4. Set up your environment variables :
+4. Set up your environment variables:
 
 ```bash
 # Copy the example env file
@@ -151,7 +151,39 @@ cp .env.example .env
 nano .env
 ```
 
-5. Start the application :
+5. Start the application:
+
+```bash
+pnpm start
+```
+
+The application will be accessible at `http://localhost:3000`.
+
+OR
+
+1. Clone and navigate to the repository:
+
+```bash
+git clone <repository-url>
+cd oracle-price-provider
+```
+
+2. Run the interactive setup script:
+
+```bash
+chmod +x local-setup.sh
+./local-setup.sh
+```
+
+This script will guide you through configuring:
+
+Price polling interval
+Certificate polling intervals
+Data provider selection and weights
+Redis connection details
+Deployer keys and other required credentials
+
+3. Start the application:
 
 ```bash
 pnpm start
@@ -340,10 +372,25 @@ Port mapping format: `HOST_PORT:CONTAINER_PORT`
 
 #### Local Development
 
-- Interactive setup process through setup.sh
-- Manual configuration required
+There are two ways to set up the oracle price provider locally:
+
+1. **Interactive Setup (Recommended for first-time users)**
+
+- Runs an interactive setup process through `local-setup.sh`
+- Guides you through configuring all required settings
+- Automatically creates configuration files and directories
+- Handles provider selection, polling intervals, and credentials
+- Sets up error logging in `src/errors/log.txt`
 - Good for development and testing
 - Configuration done once during setup
+
+2. **Manual Configuration**
+
+- Requires manual editing of configuration files
+- More flexibility for advanced users
+- Need to set up environment variables yourself
+- Must create required directories manually
+- Better for customized deployments
 
 #### Docker Environment
 
