@@ -8,7 +8,7 @@ WORKDIR /app
 # Install bash for our scripts
 RUN apk add --no-cache bash
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 
 RUN pnpm install
 
