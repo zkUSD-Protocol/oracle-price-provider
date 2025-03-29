@@ -67,7 +67,9 @@ cd oracle-price-provider
 docker build -t oracle-price-provider .
 ```
 
-<a id="environment-variables"></a> 3. Prepare Environment Variables
+<a id="environment-variables"></a>
+
+3. Prepare Environment Variables
 
 Before running the Docker image, you must set the required environment variables. Create a `.env` file with the following mandatory variables:
 
@@ -101,7 +103,7 @@ cat > .env << EOL
 DEPLOYER_KEY='test_key'
 REDIS_PORT='your_redis_port'
 REDIS_HOST='your_redis_host'
-REDIS_PASSWORD='test_password'
+REDIS_PASSWORD='your_redis_password'
 MAINNET_SIGNER_CLIENT=1
 
 # Only add if using Swapzone (required if SWAPZONE=1, which is the default)
@@ -127,13 +129,19 @@ git clone <repository-url>
 cd oracle-price-provider
 ```
 
-2. Install dependencies:
+2. Install dependencies :
 
 ```bash
 pnpm install
 ```
 
-3. Set up your environment variables:
+3. Post installation :
+
+```bash
+pnpm postinstall
+```
+
+4. Set up your environment variables :
 
 ```bash
 # Copy the example env file
@@ -143,7 +151,7 @@ cp .env.example .env
 nano .env
 ```
 
-4. Start the application:
+5. Start the application :
 
 ```bash
 pnpm start
