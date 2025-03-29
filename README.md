@@ -168,7 +168,13 @@ git clone <repository-url>
 cd oracle-price-provider
 ```
 
-2. Run the interactive setup script:
+2. Install dependencies:
+
+```bash
+pnpm install
+```
+
+3. Run the interactive setup script:
 
 ```bash
 chmod +x local-setup.sh
@@ -183,7 +189,7 @@ Data provider selection and weights
 Redis connection details
 Deployer keys and other required credentials
 
-3. Start the application:
+4. Start the application:
 
 ```bash
 pnpm start
