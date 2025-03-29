@@ -42,7 +42,7 @@ async function fetchAndUpdatePrice() {
 
     try {
       const results = await getPriceOf("mina");
-      await redis.set(PRICE_CACHE_KEY, JSON.stringify(results[1]));
+      await redis.set(PRICE_CACHE_KEY, JSON.stringify(results[2]));
 
       logHeading("+++++++++++ FINISHED PRICE UPDATE TASK +++++++++++\n");
       isTaskRunning = false;
@@ -130,7 +130,9 @@ async function startServices() {
   );
   logInfo(
     `Fetching prices from ${
-      Object.keys(SELECTED_PROVIDERS).length
+      Object.keys(SELECTED_PROVIDERS).filter(
+        (provider) => SELECTED_PROVIDERS[provider] === 1
+      ).length
     } data providers.`
   );
 

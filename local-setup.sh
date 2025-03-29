@@ -81,39 +81,50 @@ echo
 echo -e "${CYAN}Please select the data providers you want to use:${NC}"
 echo
 
-get_yes_no() {
-    while true; do
-        read -p "$1 (y/n): " yn
-        case $yn in
-            [Yy]* ) echo "1"; return;;
-            [Nn]* ) echo "0"; return;;
-            * ) echo "Please answer y or n.";;
-        esac
-    done
-}
-
 providers=("binance" "cryptocompare" "coinpaprika" "messari" "coincap" "coinlore" "coincodex" "coingecko" "kucoin" "huobi" "bybit" "cex.io" "swapzone" "mexc" "gate.io" "okx")
 provider_names=("Binance" "Crypto Compare" "Coin Paprika" "Messari" "Coin Cap" "Coin Lore" "Coin Codex" "Coin Gecko" "KuCoin" "Huobi" "ByBit" "Cex.io" "Swapzone" "MEXC" "Gate.io" "OKX")
 
 for i in "${!providers[@]}"; do
-    response=$(get_yes_no "${provider_names[$i]}")
-    selected_providers[${providers[$i]}]=$response
+    provider="${providers[$i]}"
+    provider_name="${provider_names[$i]}"
     
-    if [[ "${selected_providers[${providers[$i]}]}" == "1" ]]; then
+    # Direct implementation instead of function call
+    while true; do
+        read -p "${provider_name} (y/n): " response
+        if [[ "$response" == "y" || "$response" == "Y" ]]; then
+            selected_providers[$provider]="1"
+            break
+        elif [[ "$response" == "n" || "$response" == "N" ]]; then
+            selected_providers[$provider]="0"
+            break
+        else
+            echo -e "${YELLOW}Please enter y/n only.${NC}"
+        fi
+    done
+    
+    if [[ "${selected_providers[$provider]}" == "1" ]]; then
         while true; do
-            read -p "Weight for ${provider_names[$i]} (1-10, default is 1): " weight
+            read -p "Weight for ${provider_name} (positive number, default is 1): " weight
             if [[ -z "$weight" ]]; then
-                provider_weights[${providers[$i]}]=1
+                provider_weights[$provider]=1
                 break
-            elif [[ "$weight" =~ ^[1-9]|10$ ]]; then
-                provider_weights[${providers[$i]}]=$weight
-                break
+            # Check if it's a valid decimal number format
+            elif [[ "$weight" =~ ^[0-9]*[.][0-9]+$ || "$weight" =~ ^[0-9]+$ || "$weight" =~ ^[.][0-9]+$ ]]; then
+                # Convert to numeric value to validate it's positive
+                numeric_value=$(echo "$weight" | bc -l)
+                if (( $(echo "$numeric_value > 0" | bc -l) )); then
+                    # Store the normalized numeric value instead of raw input
+                    provider_weights[$provider]=$numeric_value
+                    break
+                else
+                    echo -e "${YELLOW}Please enter a positive number${NC}"
+                fi
             else
-                echo -e "${YELLOW}Please enter a number between 1 and 10${NC}"
+                echo -e "${YELLOW}Please enter a valid positive number${NC}"
             fi
         done
     else
-        provider_weights[${providers[$i]}]=1
+        provider_weights[$provider]=1
     fi
 done
 

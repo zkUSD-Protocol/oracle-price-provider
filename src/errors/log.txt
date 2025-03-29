@@ -1,0 +1,5 @@
+[2025-03-29T01:00:56.994Z] [UNHANDLED_REJECTION] Unhandled promise rejection
+Stack: ReplyError: WRONGPASS invalid username-password pair or user is disabled
+    at parseError (/home/botvenom/Desktop/work/web3/mina/projects/professional/zkUSD/oracle-price-provider/node_modules/.pnpm/redis-parser@3.0.0/node_modules/redis-parser/lib/parser.js:179:12)
+    at parseType (/home/botvenom/Desktop/work/web3/mina/projects/professional/zkUSD/oracle-price-provider/node_modules/.pnpm/redis-parser@3.0.0/node_modules/redis-parser/lib/parser.js:302:14)
+---------------------------------------------

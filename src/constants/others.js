@@ -1,8 +1,8 @@
 const PRICE_CACHE_KEY = "fizk:mina:latest_price";
 const CERTIFICATE_CACHE_KEY = "fizk:doh:latest_certificates";
 
-const PRICE_POLLING_INTERVAL = 180 * 1000; // 3 Minutes
-const CERTIFICATE_POLLING_INTERVAL = 600 * 1000; // 10 Minutes
+const PRICE_POLLING_INTERVAL = 180000; 
+const CERTIFICATE_POLLING_INTERVAL = 600000; 
 
 const MULTIPLICATION_FACTOR = 10;
 const COLORS = {
