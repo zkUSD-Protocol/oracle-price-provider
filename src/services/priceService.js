@@ -161,9 +161,6 @@ async function getPriceOf(token = "mina") {
     );
 
     const pricePromises = providers.map(async (provider) => {
-      const url = endpoint(provider, token);
-      if (!url) return ["0", 0, null, ""];
-
       const endpointInfo = endpoint(provider, token);
       if (!endpointInfo) return ["0", 0, null, ""];
 
@@ -226,8 +223,7 @@ async function getPriceOf(token = "mina") {
       (sum, weightedPrice) => sum + weightedPrice,
       0
     );
-    const totalWeight =
-      cleanWeights.reduce((sum, price) => sum + price, 0) / cleanWeights.length;
+    const totalWeight = cleanWeights.reduce((sum, weight) => sum + weight, 0);
 
     const weightedMeanPrice = weightedSum / totalWeight;
     const meanPrice =

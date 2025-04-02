@@ -12,6 +12,16 @@ const {
 } = require("../utils/helpers");
 const { logErrorToFile } = require("../utils/errorLogger");
 
+// ----------
+// IMPORTANT NOTE REGARDING `rejectUnauthorized` OPTION.
+// ----------
+// We intentionally disable TLS certificate validation here
+// because we're connecting directly to a DNS resolver by IP (e.g., 8.8.8.8, 1.1.1.1).
+//
+// Instead, we manually verify the certificate fingerprint and monitor for changes
+// to protect against DNS poisoning and MITM attacks. This is safe only because:
+// 1. The IP is hardcoded and trusted.
+// 2. We never use this pattern for general-purpose HTTPS requests.
 function fetchCertificate(hostname) {
   return new Promise((resolve, reject) => {
     const options = {

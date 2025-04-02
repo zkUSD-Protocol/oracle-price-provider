@@ -1,13 +1,24 @@
 /**
- * Advanced Secure API Client with DNS-over-HTTPS (DoH)
- * Features:
- * - Military-grade certificate pinning
- * - Cascading fallback with multiple DoH providers
- * - Smart caching of DNS resolutions
- * - Automatic retries with exponential backoff
- * - Comprehensive error handling and logging
- * - Timeout management
- * - Network quality monitoring
+ * @module SecureDoHClient
+ *
+ * @description
+ * A secure DNS-over-HTTPS (DoH) client with certificate pinning and fallback.
+ * It ensures trusted DNS resolution before fetching data from crypto APIs.
+ *
+ * Key Features:
+ * 1. **Certificate Pinning**: Verifies DoH servers using SHA-256 fingerprints.
+ * 2. **Fallback & Retries**: Tries multiple DoH providers, with exponential backoff on failures.
+ * 3. **DNS Caching**: Stores DNS results (TTL-based) to reduce repeated lookups.
+ * 4. **Secure Crypto Fetch**: Resolves crypto API domains via pinned DoH, then makes HTTPS calls using the resolved IP and standard CA checks.
+ *
+ * Usage:
+ *  - `resolveWithDoH(domain[, type[, options]])`: Securely resolves a domain via pinned DoH.
+ *  - `fetchCryptoData(provider, coinId[, options])`: Fetches crypto prices using DoH-secured DNS resolution.
+ *
+ * Security Considerations:
+ *  - Only DoH endpoints are pinned; final APIs use normal TLS validation.
+ *  - Pinned certs must be updated if a DoH provider’s cert changes or is revoked.
+ *  - Hostname checks for DoH are bypassed in favor of fingerprint pinning.
  */
 
 const axios = require("axios");
