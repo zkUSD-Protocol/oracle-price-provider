@@ -286,6 +286,39 @@ async function getPriceOf(token = "mina") {
   }
 }
 
+async function signPriceWithLatestBlock(priceData) {
+  try {
+    // Get the last block
+    const lastBlock = await fetchLastBlock();
+    const blockHeight = lastBlock.blockchainLength;
+    const fieldBlockHeight = BigInt(blockHeight);
+
+    // Sign the price with the latest block height
+    const signedPrice = signatureClient.signFields(
+      [BigInt(priceData.price), fieldBlockHeight],
+      DEPLOYER_KEY
+    );
+
+    // Return complete object with signature and latest block
+    return {
+      ...priceData,
+      blockHeight: blockHeight,
+      signed: {
+        signature: signedPrice.signature,
+        publicKey: signedPrice.publicKey,
+        data: {
+          price: signedPrice.data[0].toString(),
+          blockHeight: signedPrice.data[1].toString(),
+        },
+      },
+    };
+  } catch (error) {
+    console.error("Error signing price with latest block:", error.message);
+    throw error;
+  }
+}
+
 module.exports = {
   getPriceOf,
+  signPriceWithLatestBlock,
 };
