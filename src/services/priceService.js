@@ -1,15 +1,12 @@
 const { getResultPath } = require("../utils/providerHelpers");
 const _ = require("lodash");
 const { CircuitString } = require("o1js");
-const {
-  testnetSignatureClient,
-  mainnetSignatureClient,
-} = require("../utils/clients/signature");
 const { SELECTED_PROVIDERS, PROVIDER_WEIGHTS } = require("../config/providers");
 const { fetchCryptoData } = require("../utils/security/DoH");
 const { CoinGekoSymbols, endpoint } = require("../constants/data_providers");
 const { MULTIPLICATION_FACTOR, MINIMAL_VALID_PROVIDED_PRICES } = require("../constants/others");
 const { getHeaderConfig } = require("../utils/providerHelpers");
+const { signatureClient } = require("../utils/clients/signature");
 const {
   getMedian,
   getMAD,
@@ -19,12 +16,6 @@ const {
 const { logErrorToFile } = require("../utils/errorLogger");
 
 const DEPLOYER_KEY = process.env.DEPLOYER_KEY;
-const signerClient =
-  process.env.MAINNET_SIGNER_CLIENT == undefined
-    ? testnetSignatureClient
-    : process.env.MAINNET_SIGNER_CLIENT == 1
-      ? mainnetSignatureClient
-      : testnetSignatureClient;
 
 async function callSignAPICall(
   url,
@@ -75,7 +66,7 @@ async function callSignAPICall(
     const fieldDecimals = BigInt(MULTIPLICATION_FACTOR);
     const fieldTimestamp = BigInt(Timestamp);
 
-    const signature = signerClient.signFields(
+    const signature = signatureClient.signFields(
       [
         fieldURL,
         fieldPrice,
@@ -259,15 +250,6 @@ async function getPriceOf(token = "mina") {
     const processedWeightedMeanPrice = processFloatString(weightedMeanPrice);
     const processedMeanPrice = processFloatString(meanPrice);
 
-    const signedPrice = signerClient.signFields(
-      [BigInt(processedMeanPrice)],
-      DEPLOYER_KEY
-    );
-    const signedWeightedPrice = signerClient.signFields(
-      [BigInt(processedWeightedMeanPrice)],
-      DEPLOYER_KEY
-    );
-
     console.log(`Mean: ${meanPrice} | Processed Mean: ${processedMeanPrice}`);
     console.log(
       `Weighted Mean: ${weightedMeanPrice} | Processed Weighted Mean: ${processedWeightedMeanPrice}`
@@ -280,16 +262,6 @@ async function getPriceOf(token = "mina") {
       floatingWeightedPrice: weightedMeanPrice,
       decimals: MULTIPLICATION_FACTOR,
       aggregationTimestamp: aggregatedAt,
-      signature: {
-        signature: signedPrice.signature,
-        publicKey: signedPrice.publicKey,
-        data: signedPrice.data[0].toString(),
-      },
-      weightedSignature: {
-        signature: signedWeightedPrice.signature,
-        publicKey: signedWeightedPrice.publicKey,
-        data: signedWeightedPrice.data[0].toString(),
-      },
       prices_returned: cleanPrices,
       weighted_prices: cleanWeightedPrices,
       weights: cleanWeights,

@@ -78,7 +78,7 @@ DEPLOYER_KEY='your_deployer_key'
 REDIS_PORT='your_redis_port'
 REDIS_HOST='your_redis_host'
 REDIS_PASSWORD='your_redis_password'
-MAINNET_SIGNER_CLIENT=1
+CHAIN=`devnet`
 ```
 
 <a id="environment-variable-notes"></a>
@@ -88,7 +88,7 @@ MAINNET_SIGNER_CLIENT=1
 - `REDIS_PORT`: Port for Redis connection.
 - `REDIS_HOST`: Hostname or IP for Redis server.
 - `REDIS_PASSWORD`: Password for Redis authentication.
-- `MAINNET_SIGNER_CLIENT`: Set to 1 to use Mainnet signer client. Defaults to Testnet client if not set.
+- `CHAIN`: Set to mainnet or devnet. It will affect blockHeight and signatures. Defaults to devnet mina client and testnet mina-signer if not set.
 - `SWAPZONE_API_KEY`: **Required if Swapzone is enabled** - API key for the Swapzone provider.
   - By default, Swapzone is enabled in the provider list.
   - If you're using Swapzone, you must add this environment variable.
@@ -104,7 +104,7 @@ DEPLOYER_KEY='test_key'
 REDIS_PORT='your_redis_port'
 REDIS_HOST='your_redis_host'
 REDIS_PASSWORD='your_redis_password'
-MAINNET_SIGNER_CLIENT=1
+CHAIN='devnet'
 
 # Only add if using Swapzone (required if SWAPZONE=1, which is the default)
 SWAPZONE_API_KEY='your_swapzone_api_key'
@@ -440,7 +440,7 @@ Here's a complete list of all available environment variables:
 - `REDIS_HOST`: Redis server hostname
 - `REDIS_PORT`: Redis server port
 - `REDIS_PASSWORD`: Redis server password
-- `MAINNET_SIGNER_CLIENT`: Set to 1 to use Mainnet signer client
+- `CHAIN`: Set to mainnet or devnet
 
 ### Conditional Variables
 

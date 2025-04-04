@@ -6,9 +6,11 @@ declare -A provider_weights
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' 
+NC='\033[0m'
 echo -e "${CYAN}Welcome to Fizk Price Oracle Setup!${NC}"
 echo
+
+command -v bc >/dev/null || { echo "bc not found. Please install bc"; exit 1; }
 
 # Price polling interval
 while true; do
@@ -64,18 +66,19 @@ while true; do
     fi
 done
 
-# Mainnet signer client
+# Chain selection
 while true; do
-    read -p "Use mainnet signer client? (0 for testnet, 1 for mainnet, default is 0): " mainnet_signer
-    if [[ -z "$mainnet_signer" ]]; then
-        mainnet_signer=0
+    read -p "Which chain do you want to run on? (mainnet/devnet, default is devnet): " chain
+    if [[ -z "$chain" ]]; then
+        chain="devnet"
         break
-    elif [[ "$mainnet_signer" =~ ^[01]$ ]]; then
+    elif [[ "$chain" == "mainnet" || "$chain" == "devnet" ]]; then
         break
     else
-        echo -e "${YELLOW}Please enter 0 or 1${NC}"
+        echo -e "${YELLOW}Please enter 'mainnet' or 'devnet' only.${NC}"
     fi
 done
+
 
 echo
 echo -e "${CYAN}Please select the data providers you want to use:${NC}"
@@ -87,7 +90,7 @@ provider_names=("Binance" "Crypto Compare" "Coin Paprika" "Messari" "Coin Cap" "
 for i in "${!providers[@]}"; do
     provider="${providers[$i]}"
     provider_name="${provider_names[$i]}"
-    
+
     # Direct implementation instead of function call
     while true; do
         read -p "${provider_name} (y/n): " response
@@ -101,7 +104,7 @@ for i in "${!providers[@]}"; do
             echo -e "${YELLOW}Please enter y/n only.${NC}"
         fi
     done
-    
+
     if [[ "${selected_providers[$provider]}" == "1" ]]; then
         while true; do
             read -p "Weight for ${provider_name} (positive number, default is 1): " weight
@@ -150,7 +153,7 @@ DEPLOYER_KEY=${deployer_key}
 REDIS_HOST=${redis_host}
 REDIS_PORT=${redis_port}
 REDIS_PASSWORD=${redis_password}
-MAINNET_SIGNER_CLIENT=${mainnet_signer}
+CHAIN=${chain}
 PRICE_POLLING_INTERVAL=${price_polling_interval}
 CERTIFICATE_POLLING_INTERVAL=${certificate_polling_interval}
 EOL
@@ -210,10 +213,10 @@ cat > "$constants_dir/others.js" << EOL
 const PRICE_CACHE_KEY = "fizk:mina:latest_price";
 const CERTIFICATE_CACHE_KEY = "fizk:doh:latest_certificates";
 
-const PRICE_POLLING_INTERVAL = ${price_polling_ms}; 
-const CERTIFICATE_POLLING_INTERVAL = ${certificate_polling_ms}; 
+const PRICE_POLLING_INTERVAL = ${price_polling_ms};
+const CERTIFICATE_POLLING_INTERVAL = ${certificate_polling_ms};
 
-const MULTIPLICATION_FACTOR = 10;
+const MULTIPLICATION_FACTOR = 9;
 const COLORS = {
   RESET: "\x1b[0m",
   BRIGHT: "\x1b[1m",

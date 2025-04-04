@@ -3,6 +3,10 @@ const express = require("express");
 const { startServices } = require("./services/polling.js");
 const priceRoutes = require("./routes/price.js");
 const { logErrorToFile } = require("./utils/errorLogger");
+const { Mina } = require("o1js");
+const { Mainnet, Devnet } = require("./config/networks");
+
+const CHAIN = process.env.CHAIN === "mainnet" ? Mainnet : Devnet;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,7 +44,10 @@ app.use(async (err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-app.listen(PORT, () => {
++app.listen(PORT, async () => {
+  console.log(`Server running on port ${PORT}`);
+  const minaInstance = Mina.Network(CHAIN.mina[0]);
+  Mina.setActiveInstance(minaInstance);
   console.log(`Server running on port ${PORT}`);
   startServices();
 });

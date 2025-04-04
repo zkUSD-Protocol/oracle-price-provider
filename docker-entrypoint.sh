@@ -8,7 +8,7 @@ check_required_env() {
       missing+=("$var")
     fi
   done
-  
+
   if [ ${#missing[@]} -ne 0 ]; then
     echo "Error: Required environment variables are not set:"
     printf '%s\n' "${missing[@]}"
@@ -21,14 +21,13 @@ check_required_env \
   "DEPLOYER_KEY" \
   "REDIS_HOST" \
   "REDIS_PORT" \
-  "REDIS_PASSWORD" \
-  "MAINNET_SIGNER_CLIENT"
+  "CHAIN"
 
 # Check if Swapzone is enabled (defaults to 1 if not set)
 SWAPZONE=${SWAPZONE:-1}
 if [ "$SWAPZONE" = "1" ]; then
   # Check for Swapzone API key only if Swapzone is enabled
-  if [ -z "${SWAPZONE_API_KEY}" ]; then    
+  if [ -z "${SWAPZONE_API_KEY}" ]; then
     echo "Error: Swapzone is enabled but SWAPZONE_API_KEY is not set"
     exit 1
   fi
@@ -81,14 +80,16 @@ EOL
 price_polling_ms=$((${PRICE_POLLING_INTERVAL:-180} * 1000))
 certificate_polling_ms=$((${CERTIFICATE_POLLING_INTERVAL:-600} * 1000))
 
+RANDOM_NUM=$(( $RANDOM % 9000 + 1000 ))
+
 cat > src/constants/others.js << EOL
-const PRICE_CACHE_KEY = "fizk:mina:latest_price";
+const PRICE_CACHE_KEY = "fizk:mina:latest_price:${RANDOM_NUM}";
 const CERTIFICATE_CACHE_KEY = "fizk:doh:latest_certificates";
 
-const PRICE_POLLING_INTERVAL = ${price_polling_ms}; 
-const CERTIFICATE_POLLING_INTERVAL = ${certificate_polling_ms}; 
+const PRICE_POLLING_INTERVAL = ${price_polling_ms};
+const CERTIFICATE_POLLING_INTERVAL = ${certificate_polling_ms};
 
-const MULTIPLICATION_FACTOR = 10;
+const MULTIPLICATION_FACTOR = 9;
 const COLORS = {
   RESET: "\x1b[0m",
   BRIGHT: "\x1b[1m",
