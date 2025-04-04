@@ -42,27 +42,27 @@ async function fetchAndUpdatePrice() {
 
     try {
       const results = await getPriceOf("mina");
-      // Store only the price data without the block height and signature
       const priceData = {
-        price: results[1].price,
-        floatingPrice: results[1].floatingPrice,
-        decimals: results[1].decimals,
-        aggregationTimestamp: results[1].aggregationTimestamp,
-        prices_returned: results[1].prices_returned,
-        signatures: results[1].signatures,
-        timestamps: results[1].timestamps,
-        urls: results[1].urls,
+        price: results[2].price,
+        floatingPrice: results[2].floatingPrice,
+        weightedPrice: results[2].weightedPrice,
+        floatingWeightedPrice: results[2].floatingWeightedPrice,
+        decimals: results[2].decimals,
+        aggregationTimestamp: results[2].aggregationTimestamp,
+        prices_returned: results[2].prices_returned,
+        signatures: results[2].signatures,
+        timestamps: results[2].timestamps,
+        urls: results[2].urls,
       };
 
-      console.log("Setting price to redis: ", PRICE_CACHE_KEY);
-      console.log(JSON.stringify(priceData, null, 2));
+      console.log("Setting price to redis -", PRICE_CACHE_KEY);
       await redis.set(PRICE_CACHE_KEY, JSON.stringify(priceData));
+
       logHeading("+++++++++++ FINISHED PRICE UPDATE TASK +++++++++++\n");
       isTaskRunning = false;
       return true;
     } catch (error) {
       logError("Error in price update job:", error);
-      // Add error logging to file
       await logErrorToFile("PRICE_UPDATE", "Error in price update job", error);
       isTaskRunning = false;
       return false;
@@ -142,9 +142,10 @@ async function startServices() {
     `Certificate check interval set to: ${CERTIFICATE_POLLING_INTERVAL / 1000}s`
   );
   logInfo(
-    `Fetching prices from ${Object.keys(SELECTED_PROVIDERS).filter(
-      (provider) => SELECTED_PROVIDERS[provider] === 1
-    ).length
+    `Fetching prices from ${
+      Object.keys(SELECTED_PROVIDERS).filter(
+        (provider) => SELECTED_PROVIDERS[provider] === 1
+      ).length
     } data providers.`
   );
 
