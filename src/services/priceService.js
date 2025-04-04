@@ -51,12 +51,8 @@ async function callSignAPICall(
       provider === "swapzone"
         ? String(weightedPrice / 1000)
         : String(weightedPrice);
-    const Timestamp = getTimestamp(response.headers["date"]);
-    if (!dateHeader) {
-      throw new Error(
-        `Missing date header in response for provider ${provider}`
-      );
-    }
+    const dateHeader = response.headers["date"];
+    const Timestamp = getTimestamp(dateHeader);
     const normalizedWeight = String(providerWeight * MULTIPLICATION_FACTOR); // Normalized to account for weights in decimals
 
     const fieldURL = BigInt(CircuitString.fromString(url).hash());
@@ -230,6 +226,14 @@ async function getPriceOf(token = "mina") {
       validResults.signatures,
       validResults.urls
     );
+    const resultArrays = [
+      cleanPrices,
+      cleanWeightedPrices,
+      cleanWeights,
+      cleanSignatures,
+      cleanTimestamps,
+      cleanUrls,
+    ];
     if (resultArrays.some((arr) => arr.length < MINIMAL_VALID_PROVIDED_PRICES)) {
       throw new Error(
         `Insufficient data after filtering: expected at least ${limit} consistent data points, got ${cleanPrices.length}.`

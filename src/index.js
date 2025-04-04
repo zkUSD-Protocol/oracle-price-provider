@@ -44,7 +44,7 @@ app.use(async (err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-+app.listen(PORT, async () => {
+app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   const minaInstance = Mina.Network(CHAIN.mina[0]);
   Mina.setActiveInstance(minaInstance);

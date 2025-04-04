@@ -1,10 +1,8 @@
-const PRICE_CACHE_KEY = "fizk:mina:latest_price";
+const PRICE_CACHE_KEY = "fizk:mina:latest_price:9446";
 const CERTIFICATE_CACHE_KEY = "fizk:doh:latest_certificates";
 
 const PRICE_POLLING_INTERVAL = 180000;
 const CERTIFICATE_POLLING_INTERVAL = 600000;
-
-const MINIMAL_VALID_PROVIDED_PRICES = 3;
 
 const MULTIPLICATION_FACTOR = 9;
 const COLORS = {
@@ -31,6 +29,5 @@ module.exports = {
   PRICE_POLLING_INTERVAL,
   CERTIFICATE_POLLING_INTERVAL,
   MULTIPLICATION_FACTOR,
-  MINIMAL_VALID_PROVIDED_PRICES,
   COLORS,
 };

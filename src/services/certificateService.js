@@ -118,7 +118,6 @@ async function updateFingerprintsInRedis(
 
   logInfo(`Updated ${providerName} certificate fingerprints in Redis`);
 }
-
 async function validateCertificates() {
   for (const provider of DOH_PROVIDERS) {
     try {
@@ -132,6 +131,22 @@ async function validateCertificates() {
 
       const isKnown = knownFingerprints.includes(currentFingerprint);
 
+      // Convert subject/issuer to safe strings for logging
+      const subjectString = cert.subject
+        ? JSON.stringify(cert.subject)
+        : "Not available";
+      const issuerString = cert.issuer
+        ? JSON.stringify(cert.issuer)
+        : "Not available";
+
+      const certDetails = {
+        subject: subjectString,
+        issuer: issuerString,
+        valid_from: cert.valid_from || "Not available",
+        valid_to: cert.valid_to || "Not available",
+        acquisition_date: new Date().toISOString(),
+      };
+
       if (isKnown) {
         if (knownFingerprints[0] === currentFingerprint) {
           logInfo(`Certificate for ${name} is current and valid.`);
@@ -142,14 +157,6 @@ async function validateCertificates() {
           await updateFingerprintsInRedis(name, currentFingerprint);
         }
       } else {
-        const certDetails = {
-          subject: cert.subject ? cert.subject.toString() : "Not available",
-          issuer: cert.issuer ? cert.issuer.toString() : "Not available",
-          valid_from: cert.valid_from || "Not available",
-          valid_to: cert.valid_to || "Not available",
-          acquisition_date: new Date().toISOString(),
-        };
-
         logWarning("---------- CERTIFICATE CHANGE DETECTED ----------");
         logAlert(`Provider: ${name} (${hostname})`);
         logAlert("Current known fingerprints:");

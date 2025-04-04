@@ -13,6 +13,7 @@ function getMedian(array) {
     : sorted[middle];
 }
 
+
 function getTimestamp(data) {
   const date = new Date(data);
   return Math.floor(date.getTime() / 1000);

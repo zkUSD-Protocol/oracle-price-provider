@@ -23,8 +23,8 @@ check_required_env \
   "REDIS_PORT" \
   "CHAIN"
 
-# Check if Swapzone is enabled (defaults to 1 if not set)
-SWAPZONE=${SWAPZONE:-1}
+# Check if Swapzone is enabled (defaults to 0 if not set)
+SWAPZONE=${SWAPZONE:-0}
 if [ "$SWAPZONE" = "1" ]; then
   # Check for Swapzone API key only if Swapzone is enabled
   if [ -z "${SWAPZONE_API_KEY}" ]; then
