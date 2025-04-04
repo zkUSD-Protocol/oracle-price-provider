@@ -8,7 +8,7 @@ const {
 const { SELECTED_PROVIDERS, PROVIDER_WEIGHTS } = require("../config/providers");
 const { fetchCryptoData } = require("../utils/security/DoH");
 const { CoinGekoSymbols, endpoint } = require("../constants/data_providers");
-const { MULTIPLICATION_FACTOR } = require("../constants/others");
+const { MULTIPLICATION_FACTOR, MINIMAL_VALID_PROVIDED_PRICES } = require("../constants/others");
 const { getHeaderConfig } = require("../utils/providerHelpers");
 const {
   getMedian,
@@ -23,8 +23,8 @@ const signerClient =
   process.env.MAINNET_SIGNER_CLIENT == undefined
     ? testnetSignatureClient
     : process.env.MAINNET_SIGNER_CLIENT == 1
-    ? mainnetSignatureClient
-    : testnetSignatureClient;
+      ? mainnetSignatureClient
+      : testnetSignatureClient;
 
 async function callSignAPICall(
   url,
@@ -61,6 +61,11 @@ async function callSignAPICall(
         ? String(weightedPrice / 1000)
         : String(weightedPrice);
     const Timestamp = getTimestamp(response.headers["date"]);
+    if (!dateHeader) {
+      throw new Error(
+        `Missing date header in response for provider ${provider}`
+      );
+    }
     const normalizedWeight = String(providerWeight * MULTIPLICATION_FACTOR); // Normalized to account for weights in decimals
 
     const fieldURL = BigInt(CircuitString.fromString(url).hash());
@@ -172,10 +177,15 @@ async function getPriceOf(token = "mina") {
     );
 
     const pricePromises = providers.map(async (provider) => {
+      const weight = PROVIDER_WEIGHTS[provider];
+
+      if (typeof weight !== 'number' || weight < 0) {
+        throw new Error(`Invalid provider weight for "${provider}": ${weight}`);
+      }
+
       const endpointInfo = endpoint(provider, token);
       if (!endpointInfo) return ["0", 0, null, ""];
 
-      // Special case for CoinGecko
       const tokenId =
         provider === "coingecko" ? CoinGekoSymbols[token.toLowerCase()] : null;
 
@@ -185,7 +195,7 @@ async function getPriceOf(token = "mina") {
         endpointInfo.url,
         resultPath,
         provider,
-        PROVIDER_WEIGHTS[provider],
+        weight,
         endpointInfo.id
       );
     });
@@ -229,6 +239,11 @@ async function getPriceOf(token = "mina") {
       validResults.signatures,
       validResults.urls
     );
+    if (resultArrays.some((arr) => arr.length < MINIMAL_VALID_PROVIDED_PRICES)) {
+      throw new Error(
+        `Insufficient data after filtering: expected at least ${limit} consistent data points, got ${cleanPrices.length}.`
+      );
+    }
 
     const weightedSum = cleanWeightedPrices.reduce(
       (sum, weightedPrice) => sum + weightedPrice,
