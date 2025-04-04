@@ -1,10 +1,13 @@
 const { getResultPath } = require("../utils/providerHelpers");
 const _ = require("lodash");
-const { CircuitString } = require("o1js");
+const { CircuitString, fetchLastBlock } = require("o1js");
 const { SELECTED_PROVIDERS, PROVIDER_WEIGHTS } = require("../config/providers");
 const { fetchCryptoData } = require("../utils/security/DoH");
 const { CoinGekoSymbols, endpoint } = require("../constants/data_providers");
-const { MULTIPLICATION_FACTOR, MINIMAL_VALID_PROVIDED_PRICES } = require("../constants/others");
+const {
+  MULTIPLICATION_FACTOR,
+  MINIMAL_VALID_PROVIDED_PRICES,
+} = require("../constants/others");
 const { getHeaderConfig } = require("../utils/providerHelpers");
 const { signatureClient } = require("../utils/clients/signature");
 const {
@@ -166,7 +169,7 @@ async function getPriceOf(token = "mina") {
     const pricePromises = providers.map(async (provider) => {
       const weight = PROVIDER_WEIGHTS[provider];
 
-      if (typeof weight !== 'number' || weight < 0) {
+      if (typeof weight !== "number" || weight < 0) {
         throw new Error(`Invalid provider weight for "${provider}": ${weight}`);
       }
 
@@ -234,7 +237,9 @@ async function getPriceOf(token = "mina") {
       cleanTimestamps,
       cleanUrls,
     ];
-    if (resultArrays.some((arr) => arr.length < MINIMAL_VALID_PROVIDED_PRICES)) {
+    if (
+      resultArrays.some((arr) => arr.length < MINIMAL_VALID_PROVIDED_PRICES)
+    ) {
       throw new Error(
         `Insufficient data after filtering: expected at least ${limit} consistent data points, got ${cleanPrices.length}.`
       );
