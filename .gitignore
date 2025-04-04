@@ -1,2 +1,5 @@
 node_modules/
 .env
+scripts/
+pnpm-lock.yaml
+src/errors/log.txt
