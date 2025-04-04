@@ -37,21 +37,6 @@ A price oracle service for zkUSD that aggregates cryptocurrency price data from 
 
 ## Quick Start Guide
 
-<a id="using-prebuilt"></a>
-
-### Using Pre-built Docker Image
-
-Pull and run the latest version from Docker Hub:
-
-```bash
-docker pull botdock/oracle-price-provider:latest
-docker run -p 3000:3000 --env-file .env botdock/oracle-price-provider:latest
-```
-
-> **Note:** Make sure to set up the [required environment variables](#environment-variables) before running the container.
-
-<a id="building-from-source"></a>
-
 ### Docker Setup (Building from Source)
 
 1. Clone and navigate to the repository:
