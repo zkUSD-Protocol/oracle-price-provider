@@ -7,7 +7,6 @@
 - [Oracle Price Provider](#oracle-price-provider)
   - [Table of Contents](#table-of-contents)
   - [Quick Start Guide](#quick-start-guide)
-    - [Using Pre-built Docker Image](#using-pre-built-docker-image)
     - [Docker Setup (Building from Source)](#docker-setup-building-from-source)
     - [Local Development Setup](#local-development-setup)
   - [Configuration](#configuration)
