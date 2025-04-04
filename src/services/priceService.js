@@ -41,6 +41,17 @@ async function callSignAPICall(
     });
 
     const price = _.get(response, resultPath);
+    if (!price || isNaN(Number(price))) {
+      console.error(`Error calling API ${url},`, `received price-${price}.`);
+      await logErrorToFile(
+        "API_CALL",
+        `Error calling API ${url},`,
+        `received price-${price}.`,
+        ""
+      );
+      return ["0", 0, null, url];
+    }
+
     const weightedPrice = price * providerWeight;
 
     const Price =

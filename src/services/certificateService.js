@@ -142,6 +142,14 @@ async function validateCertificates() {
           await updateFingerprintsInRedis(name, currentFingerprint);
         }
       } else {
+        const certDetails = {
+          subject: cert.subject ? cert.subject.toString() : "Not available",
+          issuer: cert.issuer ? cert.issuer.toString() : "Not available",
+          valid_from: cert.valid_from || "Not available",
+          valid_to: cert.valid_to || "Not available",
+          acquisition_date: new Date().toISOString(),
+        };
+
         logWarning("---------- CERTIFICATE CHANGE DETECTED ----------");
         logAlert(`Provider: ${name} (${hostname})`);
         logAlert("Current known fingerprints:");
@@ -149,14 +157,36 @@ async function validateCertificates() {
           logAlert(`  ${i === 0 ? "Current" : "Previous"}: ${fp}`);
         });
         logAlert(`New certificate fingerprint: ${currentFingerprint}`);
+        logAlert("Certificate Details:");
+        logAlert(`  Acquisition Date: ${certDetails.acquisition_date}`);
+        logAlert(`  Subject: ${certDetails.subject}`);
+        logAlert(`  Issuer: ${certDetails.issuer}`);
+        logAlert(`  Valid From: ${certDetails.valid_from}`);
+        logAlert(`  Valid To: ${certDetails.valid_to}`);
 
         await updateFingerprintsInRedis(name, currentFingerprint);
 
         logSuccess("Certificate fingerprints updated in Redis.");
         logAlert(
-          "----------------------------------------------------------------"
+          "----------------------------------------------------------------\n"
         );
-        console.log("");
+
+        let detailedMessage =
+          "\n---------- CERTIFICATE CHANGE DETECTED ----------\n";
+        detailedMessage += `Provider: ${name} (${hostname})\n`;
+        detailedMessage += "Current known fingerprints:\n";
+        knownFingerprints.forEach((fp, i) => {
+          detailedMessage += `  ${i === 0 ? "Current" : "Previous"}: ${fp}\n`;
+        });
+        detailedMessage += `New certificate fingerprint: ${currentFingerprint}\n`;
+        detailedMessage += "Certificate Details:\n";
+        detailedMessage += `  Acquisition Date: ${certDetails.acquisition_date}\n`;
+        detailedMessage += `  Subject: ${certDetails.subject}\n`;
+        detailedMessage += `  Issuer: ${certDetails.issuer}\n`;
+        detailedMessage += `  Valid From: ${certDetails.valid_from}\n`;
+        detailedMessage += `  Valid To: ${certDetails.valid_to}\n\n`;
+        detailedMessage += "Certificate fingerprints updated in Redis.\n";
+        await logErrorToFile("CERTIFICATE_SERVICE", detailedMessage);
       }
     } catch (error) {
       logError(

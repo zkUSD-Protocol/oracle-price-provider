@@ -17,7 +17,6 @@ async function ensureErrorDirExists() {
   }
 }
 
-// Log an error to the file
 async function logErrorToFile(source, errorMessage, errorObj = null) {
   await ensureErrorDirExists();
 
@@ -28,7 +27,8 @@ async function logErrorToFile(source, errorMessage, errorObj = null) {
     logEntry += `Stack: ${errorObj.stack || "No stack trace"}\n`;
   }
 
-  logEntry += "---------------------------------------------\n";
+  logEntry += "\n[ENTRY] ---------------------------------------------";
+  logEntry += "-----------------------------------------------------\n";
 
   try {
     await fs.appendFile(errorLogFile, logEntry);
