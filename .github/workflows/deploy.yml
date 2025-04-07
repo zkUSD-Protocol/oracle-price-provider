@@ -55,3 +55,28 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/zkusd-oracle:latest
             ${{ steps.login-ecr.outputs.registry }}/zkusd-oracle:${{ steps.set_docker_tag.outputs.tag }}
+
+  push-to-public-ecr:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Configure AWS credentials (OIDC) for public ECR
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::565802942559:role/zkusd-services-github-actions-role
+          aws-region: us-east-1 # Public ECR is in us-east-1
+
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
+          mask-password: true
+
+      - name: Pull and retag image
+        run: |
+          docker pull ${{ needs.build-and-push.outputs.ecr_registry }}/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }}
+          docker tag ${{ needs.build-and-push.outputs.ecr_registry }}/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }} public.ecr.aws/v5p9f2o9/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }}
+          docker tag ${{ needs.build-and-push.outputs.ecr_registry }}/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }} public.ecr.aws/v5p9f2o9/zkusd-oracle:latest
+          docker push public.ecr.aws/v5p9f2o9/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }}
+          docker push public.ecr.aws/v5p9f2o9/zkusd-oracle:latest
