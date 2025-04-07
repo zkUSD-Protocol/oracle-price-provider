@@ -11,10 +11,6 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    outputs:
-      # Outputs for the second job:
-      ecr_registry: ${{ steps.login-ecr.outputs.registry }}
-      docker_tag: ${{ steps.set_docker_tag.outputs.tag }}
 
     steps:
       - name: Checkout code
@@ -38,48 +34,19 @@ jobs:
           SHORT_SHA="${GITHUB_SHA::7}"
           echo "tag=$SHORT_SHA" >> $GITHUB_OUTPUT
 
-      # 7) LOGIN TO ECR
+      # Login to ECR
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
         with:
           mask-password: true
 
-      # 8) BUILD AND PUSH DOCKER IMAGE
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          platforms: linux/arm64
-          push: true
-          tags: |
-            ${{ steps.login-ecr.outputs.registry }}/zkusd-oracle:latest
-            ${{ steps.login-ecr.outputs.registry }}/zkusd-oracle:${{ steps.set_docker_tag.outputs.tag }}
-
-  push-to-public-ecr:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    steps:
-      # First configure credentials for eu-central-1 to pull from private ECR
-      - name: Configure AWS credentials for private ECR
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          role-to-assume: arn:aws:iam::565802942559:role/zkusd-services-github-actions-role
-          aws-region: eu-central-1
-
-      # Login to private ECR to pull the image
-      - name: Login to private Amazon ECR
-        id: login-private-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          mask-password: true
-
-      # Now switch to us-east-1 for the public ECR repository
+      # Configure for public ECR
       - name: Configure AWS credentials for public ECR
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::565802942559:role/zkusd-services-github-actions-role
-          aws-region: us-east-1 # Public ECR is in us-east-1
+          aws-region: us-east-1
 
       # Login to public ECR
       - name: Login to Amazon ECR Public
@@ -89,11 +56,15 @@ jobs:
           registry-type: public
           mask-password: true
 
-      # Pull, retag and push to public ECR
-      - name: Pull and retag image
-        run: |
-          docker pull ${{ needs.build-and-push.outputs.ecr_registry }}/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }}
-          docker tag ${{ needs.build-and-push.outputs.ecr_registry }}/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }} public.ecr.aws/v5p9f2o9/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }}
-          docker tag ${{ needs.build-and-push.outputs.ecr_registry }}/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }} public.ecr.aws/v5p9f2o9/zkusd-oracle:latest
-          docker push public.ecr.aws/v5p9f2o9/zkusd-oracle:${{ needs.build-and-push.outputs.docker_tag }}
-          docker push public.ecr.aws/v5p9f2o9/zkusd-oracle:latest
+      # BUILD AND PUSH DOCKER IMAGE to both registries
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/arm64,linux/amd64 # Build for both architectures
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/zkusd-oracle:latest
+            ${{ steps.login-ecr.outputs.registry }}/zkusd-oracle:${{ steps.set_docker_tag.outputs.tag }}
+            public.ecr.aws/v5p9f2o9/zkusd-oracle:latest
+            public.ecr.aws/v5p9f2o9/zkusd-oracle:${{ steps.set_docker_tag.outputs.tag }}
