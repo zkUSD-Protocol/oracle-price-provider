@@ -39,7 +39,8 @@ cd zkusd-oracle
 
 # Download docker-compose.yml
 echo -e "${YELLOW}Downloading docker-compose.yml...${NC}"
-curl -s -o docker-compose.yml https://raw.githubusercontent.com/zkUSD-Protocol/oracle-price-provider/main/docker-compose.yml
+curl -s -o docker-compose.yml https://raw.githubusercontent.com/zkUSD-Protocol/oracle-price-provider/feat/oracle-setup/docker-compose.yml
+
 
 if [ ! -f docker-compose.yml ]; then
     echo -e "${RED}Failed to download docker-compose.yml${NC}"
