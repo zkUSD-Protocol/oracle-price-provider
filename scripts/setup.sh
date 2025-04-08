@@ -87,7 +87,7 @@ CHAIN=${CHAIN}
 
 # Redis configuration
 REDIS_PORT=6379
-REDIS_HOST=
+REDIS_HOST=redis
 REDIS_PASSWORD=${REDIS_PASSWORD}
 
 # Polling intervals
